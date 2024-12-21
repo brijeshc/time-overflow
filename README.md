@@ -39,6 +39,10 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+## Expo vector icons
+
+Kindly check this link for ionicons list. https://icons.expo.fyi/Index
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:
