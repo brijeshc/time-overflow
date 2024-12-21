@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Animated, Easing, Text } from "react-native";
+import { View, StyleSheet, Animated, Easing, Text, Falsy, RecursiveArray, RegisteredStyle } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
+import { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheetTypes";
 
 const getNumberPosition = (hour: number) => {
   // Subtract 90 degrees to start at 12 o'clock position
@@ -13,7 +14,7 @@ const getNumberPosition = (hour: number) => {
   };
 };
 
-export const AnalogClock = () => {
+export const AnalogClock = (props: { style: ViewStyle }) => {
   const [time, setTime] = useState(new Date());
   const secondRotation = new Animated.Value(0);
 
@@ -84,10 +85,7 @@ export const AnalogClock = () => {
   const secondDegrees = seconds * 6;
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.dateText, { color: textColor }]}>
-        {formatDate(time)}
-      </Text>
+    <View style={[styles.container, props.style]}>
       <LinearGradient
         colors={[backgroundColor, "rgba(255,255,255,0.1)"]}
         style={[styles.clockFace, { borderColor: textColor }]}
@@ -171,10 +169,12 @@ export const AnalogClock = () => {
         {/* Center dot */}
         <View style={[styles.centerDot, { backgroundColor: textColor }]} />
       </LinearGradient>
+      <Text style={[styles.dateText, { color: textColor }]}>
+        {formatDate(time)}
+      </Text>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
