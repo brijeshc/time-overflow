@@ -1,4 +1,13 @@
-import { StyleSheet, TextInput, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  TouchableOpacity,
+  Animated,
+  PanResponder,
+  Vibration,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React, { useState } from "react";
@@ -7,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 type Category = "productive" | "neutral" | "wasteful";
 
-export function TimeLogging() {
+export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const [activity, setActivity] = useState("");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -15,6 +24,38 @@ export function TimeLogging() {
 
   const inputBackground = useThemeColor({}, "background");
   const inputText = useThemeColor({}, "text");
+
+  const slideAnimation = new Animated.Value(0);
+  const buttonWidth = 250;
+  const threshold = buttonWidth * 0.4;
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (_, gestureState) => {
+      const newValue = Math.max(0, Math.min(gestureState.dx, buttonWidth));
+      slideAnimation.setValue(newValue);
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx >= threshold) {
+        Animated.spring(slideAnimation, {
+          toValue: buttonWidth,
+          useNativeDriver: false,
+        }).start(() => {
+          Vibration.vibrate([0, 50, 30, 50]);
+          handleLogActivity();
+        });
+      } else {
+        Animated.spring(slideAnimation, {
+          toValue: 0,
+          useNativeDriver: false,
+        }).start();
+      }
+    },
+  });
+
+  const handleLogActivity = () => {
+    onComplete();
+  };
 
   const handleHoursInput = (value: string) => {
     const numValue = parseInt(value) || 0;
@@ -29,11 +70,44 @@ export function TimeLogging() {
     setHours((prevHours) => Math.min(24, prevHours + additionalHours));
     setMinutes(remainingMinutes);
   };
+
   const categoryColors = {
     productive: "#4CAF50",
     neutral: "#FFC107",
     wasteful: "#FF5252",
   };
+
+  const renderSlideToLog = () => (
+    <View style={styles.slideContainer}>
+      <View style={styles.slideTrack}>
+        <Animated.Text
+          style={[
+            styles.slideText,
+            {
+              opacity: slideAnimation.interpolate({
+                inputRange: [0, buttonWidth / 2],
+                outputRange: [1, 0],
+              }),
+            },
+          ]}
+        >
+          Slide to Log
+        </Animated.Text>
+      </View>
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.slideButton,
+          {
+            transform: [{ translateX: slideAnimation }],
+            zIndex: 2,
+          },
+        ]}
+      >
+        <Ionicons name="arrow-forward" size={24} color="#fff" />
+      </Animated.View>
+    </View>
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -85,16 +159,19 @@ export function TimeLogging() {
             placeholderTextColor={inputText}
           />
         </View>
-      </View>
 
-      <LinearGradient
-        colors={["rgba(197, 205, 228, 0.24)", "rgba(0, 162, 255, 0.2)"]}
-        style={styles.timeDisplayGradient}
-      >
-        <ThemedText style={styles.timeDisplayText}>
-          {`${hours}h ${minutes}m`}
-        </ThemedText>
-      </LinearGradient>
+        <View style={styles.timeField}>
+          <ThemedText style={styles.timeLabel}>Selected Time</ThemedText>
+          <LinearGradient
+            colors={["rgba(233, 222, 222, 0.24)", "rgba(14, 14, 14, 0.2)"]}
+            style={styles.inlineTimeDisplay}
+          >
+            <ThemedText style={styles.inlineTimeText}>
+              {`${hours}h ${minutes}m`}
+            </ThemedText>
+          </LinearGradient>
+        </View>
+      </View>
 
       <View style={styles.categoryContainer}>
         {Object.entries(categoryColors).map(([cat, color]) => (
@@ -113,12 +190,13 @@ export function TimeLogging() {
           </TouchableOpacity>
         ))}
       </View>
-
-      <TouchableOpacity style={styles.logButton}>
-        <ThemedText style={styles.logButtonText}>Log Activity</ThemedText>
-      </TouchableOpacity>
+      {renderSlideToLog()}
     </ThemedView>
   );
+}
+
+interface TimeLoggingProps {
+  onComplete: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -162,24 +240,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
   },
-  logButton: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  logButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: "Ubuntu_400Regular",
-  },
-  timeContainer: {
-    marginVertical: 15,
-  },
-  slider: {
-    width: "100%",
-    height: 40,
-  },
   timeInputContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -203,22 +263,55 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontFamily: "Poppins_500Medium",
   },
-  timeDisplay: {
-    fontSize: 32,
-    fontFamily: "Ubuntu_400Regular",
-    textAlign: "center",
-    color: "#007AFF"
+  inlineTimeDisplay: {
+    height: 45,
+    borderRadius: 8,
+    justifyContent: "center",
   },
-  timeDisplayGradient: {
-    borderRadius: 12,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  timeDisplayText: {
-    fontSize: 32,
+  inlineTimeText: {
+    fontSize: 16,
     fontFamily: "Ubuntu_400Regular",
     textAlign: "center",
     color: "#007AFF",
-    padding: 15,
+  },
+  slideContainer: {
+    height: 60,
+    width: 230,
+    backgroundColor: "rgba(248, 246, 246, 0.1)",
+    borderColor: '#3498db',
+    borderWidth: 1,
+    borderRadius: 30,
+    overflow: "hidden",
+    position: "relative",
+    alignSelf: "center",
+    marginTop: 20,
+  },
+  slideTrack: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  slideText: {
+    fontSize: 16,
+    fontFamily: "Ubuntu_400Regular",
+    color: "#007AFF",
+  },
+  slideButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#007AFF",
+    borderRadius: 25,
+    position: "absolute",
+    top: 5,
+    left: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
