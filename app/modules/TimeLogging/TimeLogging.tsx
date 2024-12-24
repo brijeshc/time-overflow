@@ -14,9 +14,16 @@ import React, { useState } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 
+
 type Category = "productive" | "neutral" | "wasteful";
 
 export default function TimeLogging({ onComplete }: TimeLoggingProps) {
+
+  const selectedBorder = useThemeColor({
+    light: "rgba(0, 0, 0, 1)",    // Subtle dark border for light mode
+    dark: "rgb(219, 246, 248)" // Subtle light border for dark mode
+  }, "text");
+
   const [activity, setActivity] = useState("");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -82,7 +89,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
       <View style={styles.slideTrack}>
         <Animated.Text
           style={[
-            styles.slideText,
+            [styles.slideText, {color: selectedBorder}],
             {
               opacity: slideAnimation.interpolate({
                 inputRange: [0, buttonWidth / 2],
@@ -180,7 +187,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
             style={[
               styles.categoryButton,
               { backgroundColor: color },
-              category === cat && styles.selectedCategory,
+              category === cat && [styles.selectedCategory, { borderColor: selectedBorder }],
             ]}
             onPress={() => setCategory(cat as Category)}
           >
@@ -226,14 +233,13 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 30,
     flex: 1,
     marginHorizontal: 5,
     alignItems: "center",
   },
   selectedCategory: {
-    borderWidth: 2,
-    borderColor: "#fff",
+    borderWidth: 3
   },
   categoryText: {
     color: "#fff",
@@ -296,7 +302,7 @@ const styles = StyleSheet.create({
   slideText: {
     fontSize: 16,
     fontFamily: "Ubuntu_400Regular",
-    color: "#007AFF",
+    // color: "#007AFF",
   },
   slideButton: {
     width: 50,

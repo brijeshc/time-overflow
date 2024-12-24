@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Animated, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, Animated, TouchableOpacity, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { AnalogClock } from "@/components/AnalogClock";
@@ -8,17 +8,12 @@ import { Ubuntu_400Regular } from "@expo-google-fonts/ubuntu";
 import TimeLogging from "../modules/TimeLogging/TimeLogging";
 import { useState, useRef } from "react";
 import { Ionicons } from '@expo/vector-icons';
-
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function HomeScreen() {
+  const backgroundColor = useThemeColor({}, "background"); 
   const [showLogging, setShowLogging] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  let [fontsLoaded] = useFonts({
-    PlayfairDisplay_700Bold,
-    Poppins_500Medium,
-    Ubuntu_400Regular,
-  });
 
   const handlePress = () => {
     Animated.sequence([
@@ -29,36 +24,48 @@ export default function HomeScreen() {
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: 4,
-        tension: 40,
+        friction: 7,
+        tension: 20,
         useNativeDriver: true,
       })
-    ]).start();
-    setShowLogging(true);
+    ]).start(() => {
+      setTimeout(() => {
+        setShowLogging(true);
+      }, 100);
+    });
   };
 
   const handleLogComplete = () => {
     setShowLogging(false);
   };
 
+  let [fontsLoaded] = useFonts({
+    PlayfairDisplay_700Bold,
+    Poppins_500Medium,
+    Ubuntu_400Regular,
+  });
+
   if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <ScrollView>
+    <ScrollView 
+      style={[styles.scrollView, { backgroundColor }]}
+      contentContainerStyle={styles.contentContainer}
+    >
       <ThemedView style={styles.container}>
         <AnalogClock style={styles.clockContainer}/>
         
         {!showLogging ? (
-          <Animated.View style={[styles.actionContainer, { transform: [{ scale: scaleAnim }] }]}>
+          <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
             <TouchableOpacity 
-              style={styles.addButton}
+              style={styles.logButton}
               onPress={handlePress}
             >
-              <Ionicons name="add-circle" size={64} color="#007AFF" />
+              <Ionicons name="time-outline" size={24} color="#007AFF"/>
+              <ThemedText style={styles.buttonText}>Log Your Time</ThemedText>
             </TouchableOpacity>
-            <ThemedText style={styles.actionText}>Log Your Activity</ThemedText>
           </Animated.View>
         ) : (
           <TimeLogging onComplete={handleLogComplete} />
@@ -69,6 +76,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     alignItems: "center",
@@ -78,11 +91,17 @@ const styles = StyleSheet.create({
   clockContainer: {
     marginTop: 15
   },
-  actionContainer: {
+  logButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: "rgba(248, 246, 246, 0.1)",
+    borderColor: '#3498db',
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     marginTop: 30,
-  },
-  addButton: {
+    gap: 8,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -92,10 +111,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  actionText: {
-    marginTop: 15,
+  buttonText: {
     fontSize: 18,
     fontFamily: "Poppins_500Medium",
-    opacity: 0.8
   }
 });
