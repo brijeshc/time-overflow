@@ -9,6 +9,9 @@ import TimeLogging from "../modules/TimeLogging/TimeLogging";
 import { useState, useRef } from "react";
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { TodayActivities } from "../modules/TodayActivities/TodayActivities";
+import { TodaySummary } from "../modules/TodaySummary/TodaySummary";
+import { TimeLoggingProvider } from "../context/TimeLoggingContext";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background"); 
@@ -50,12 +53,14 @@ export default function HomeScreen() {
   }
 
   return (
+    <TimeLoggingProvider>
     <ScrollView 
       style={[styles.scrollView, { backgroundColor }]}
       contentContainerStyle={styles.contentContainer}
     >
       <ThemedView style={styles.container}>
         <AnalogClock style={styles.clockContainer}/>
+        
         
         {!showLogging ? (
           <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
@@ -70,8 +75,12 @@ export default function HomeScreen() {
         ) : (
           <TimeLogging onComplete={handleLogComplete} />
         )}
+         {!showLogging && <TodaySummary />}
+        {!showLogging && <TodayActivities />}
       </ThemedView>
+
     </ScrollView>
+    </TimeLoggingProvider>
   );
 }
 

@@ -13,6 +13,9 @@ import { ThemedView } from "@/components/ThemedView";
 import React, { useState } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
+import { TimeLoggingStorage } from "./timeLoggingService";
+import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
+import { nanoid } from 'nanoid/non-secure';
 
 
 type Category = "productive" | "neutral" | "wasteful";
@@ -60,8 +63,30 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
     },
   });
 
-  const handleLogActivity = () => {
-    onComplete();
+  const handleLogActivity = async () => {
+    if (hours === 0 && minutes === 0) {
+      onComplete();
+      return;
+    }
+
+    const activityName = activity.trim() || category;
+    const newEntry: TimeLogEntry = {
+      id: nanoid(),
+      activity: activityName,
+      hours,
+      minutes,
+      category,
+      timestamp: new Date().toISOString(),
+      synced: false
+    };
+  
+    try {
+      await TimeLoggingStorage.saveLogs(newEntry);
+      onComplete();
+    } catch (error) {
+      // Handle error appropriately
+      console.error('Failed to save time log:', error);
+    }
   };
 
   const handleHoursInput = (value: string) => {
