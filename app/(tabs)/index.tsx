@@ -1,22 +1,53 @@
-import { ScrollView, StyleSheet, Animated, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+} from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { AnalogClock } from "@/components/AnalogClock";
-import { useFonts, PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display";
+import {
+  useFonts,
+  PlayfairDisplay_700Bold,
+} from "@expo-google-fonts/playfair-display";
 import { Poppins_500Medium } from "@expo-google-fonts/poppins";
 import { Ubuntu_400Regular } from "@expo-google-fonts/ubuntu";
 import TimeLogging from "../modules/TimeLogging/TimeLogging";
-import { useState, useRef } from "react";
-import { Ionicons } from '@expo/vector-icons';
+import { useState, useRef, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { TodayActivities } from "../modules/TodayActivities/TodayActivities";
 import { TodaySummary } from "../modules/TodaySummary/TodaySummary";
 import { TimeLoggingProvider } from "../context/TimeLoggingContext";
+import { EmptyStatePrompt } from "../modules/EmptyStatePrompt/EmptyStatePrompt";
+import React from "react";
+import { BackHandler } from "react-native";
+import { SideMenu } from "../modules/SideMenu/SideMenu";
 
 export default function HomeScreen() {
-  const backgroundColor = useThemeColor({}, "background"); 
+  const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
   const [showLogging, setShowLogging] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  
+  useEffect(() => {
+    const backAction = () => {
+      if (showLogging) {
+        setShowLogging(false);
+        return true; // Prevents default back action
+      }
+      return false; // Allows default back action (exit app)
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [showLogging]);
 
   const handlePress = () => {
     Animated.sequence([
@@ -30,7 +61,7 @@ export default function HomeScreen() {
         friction: 7,
         tension: 20,
         useNativeDriver: true,
-      })
+      }),
     ]).start(() => {
       setTimeout(() => {
         setShowLogging(true);
@@ -54,32 +85,40 @@ export default function HomeScreen() {
 
   return (
     <TimeLoggingProvider>
-    <ScrollView 
-      style={[styles.scrollView, { backgroundColor }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <ThemedView style={styles.container}>
-        <AnalogClock style={styles.clockContainer}/>
-        
-        
-        {!showLogging ? (
-          <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
-            <TouchableOpacity 
-              style={styles.logButton}
-              onPress={handlePress}
-            >
-              <Ionicons name="time-outline" size={24} color="#007AFF"/>
-              <ThemedText style={styles.buttonText}>Log Your Time</ThemedText>
-            </TouchableOpacity>
-          </Animated.View>
-        ) : (
-          <TimeLogging onComplete={handleLogComplete} />
-        )}
-         {!showLogging && <TodaySummary />}
-        {!showLogging && <TodayActivities />}
-      </ThemedView>
+      <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
+      <ScrollView
+        style={[styles.scrollView, { backgroundColor }]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <ThemedView style={styles.container}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setShowMenu(true)}
+          >
+            <Ionicons name="settings-outline" size={24} color={textColor} />
+          </TouchableOpacity>
 
-    </ScrollView>
+          <AnalogClock style={styles.clockContainer} />
+
+          {!showLogging ? (
+            <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
+              <TouchableOpacity style={styles.logButton} onPress={handlePress}>
+                <Ionicons name="time-outline" size={24} color="#007AFF" />
+                <ThemedText style={styles.buttonText}>Log Your Time</ThemedText>
+              </TouchableOpacity>
+            </Animated.View>
+          ) : (
+            <TimeLogging onComplete={handleLogComplete} />
+          )}
+          {!showLogging && (
+            <>
+              <TodaySummary />
+              <TodayActivities />
+              <EmptyStatePrompt />
+            </>
+          )}
+        </ThemedView>
+      </ScrollView>
     </TimeLoggingProvider>
   );
 }
@@ -87,6 +126,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+  },
+  menuButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(248, 246, 246, 0.1)",
+    borderColor: "#3498db",
+    borderWidth: 1,
   },
   contentContainer: {
     flexGrow: 1,
@@ -98,13 +147,13 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   clockContainer: {
-    marginTop: 15
+    marginTop: 15,
   },
   logButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "rgba(248, 246, 246, 0.1)",
-    borderColor: '#3498db',
+    borderColor: "#3498db",
     borderWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -123,5 +172,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontFamily: "Poppins_500Medium",
-  }
+  },
 });
