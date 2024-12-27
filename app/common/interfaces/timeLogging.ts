@@ -15,3 +15,16 @@ export interface TimeLogAnalytics {
   mostFrequentActivity: string;
   averageSessionDuration: number;
 }
+
+export interface DailyTargets {
+  productiveHours: number;
+  wastefulMaxHours: number;
+  neutralMaxHours: number;
+}
+
+// Add default targets
+export const DEFAULT_TARGETS: DailyTargets = {
+  productiveHours: 8,
+  wastefulMaxHours: 2,
+  neutralMaxHours: 4
+};

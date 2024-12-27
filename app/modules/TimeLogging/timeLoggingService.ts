@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TimeLogEntry } from '@/app/common/interfaces/timeLogging';
+import { DailyTargets, DEFAULT_TARGETS, TimeLogEntry } from '@/app/common/interfaces/timeLogging';
 
 const STORAGE_KEY = '@time_overflow_logs';
+const TARGETS_KEY = '@time_overflow_targets';
 
 export const TimeLoggingStorage = {
   async saveLogs(entry: TimeLogEntry): Promise<void> {
@@ -41,6 +42,27 @@ export const TimeLoggingStorage = {
     } catch (error) {
       console.error('Error importing logs:', error);
       throw error;
+    }
+  }
+};
+
+export const TargetsStorage = {
+  async saveTargets(targets: DailyTargets): Promise<void> {
+    try {
+      await AsyncStorage.setItem(TARGETS_KEY, JSON.stringify(targets));
+    } catch (error) {
+      console.error('Error saving targets:', error);
+      throw error;
+    }
+  },
+
+  async getTargets(): Promise<DailyTargets> {
+    try {
+      const targets = await AsyncStorage.getItem(TARGETS_KEY);
+      return targets ? JSON.parse(targets) : DEFAULT_TARGETS;
+    } catch (error) {
+      console.error('Error retrieving targets:', error);
+      return DEFAULT_TARGETS;
     }
   }
 };

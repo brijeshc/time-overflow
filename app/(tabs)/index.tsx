@@ -85,11 +85,11 @@ export default function HomeScreen() {
 
   return (
     <TimeLoggingProvider>
-      <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
       <ScrollView
         style={[styles.scrollView, { backgroundColor }]}
         contentContainerStyle={styles.contentContainer}
       >
+        <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
         <ThemedView style={styles.container}>
           <TouchableOpacity
             style={styles.menuButton}
@@ -119,6 +119,7 @@ export default function HomeScreen() {
           )}
         </ThemedView>
       </ScrollView>
+      <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
     </TimeLoggingProvider>
   );
 }

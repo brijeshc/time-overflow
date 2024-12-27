@@ -16,12 +16,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TimeLoggingStorage } from "./timeLoggingService";
 import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
 import { nanoid } from 'nanoid/non-secure';
-
+import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 type Category = "productive" | "neutral" | "wasteful";
 
 export default function TimeLogging({ onComplete }: TimeLoggingProps) {
 
+  const { triggerRefresh } = useTimeLogging();
   const selectedBorder = useThemeColor({
     light: "rgba(0, 0, 0, 1)",    // Subtle dark border for light mode
     dark: "rgb(219, 246, 248)" // Subtle light border for dark mode
@@ -82,6 +83,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   
     try {
       await TimeLoggingStorage.saveLogs(newEntry);
+      triggerRefresh();
       onComplete();
     } catch (error) {
       // Handle error appropriately
