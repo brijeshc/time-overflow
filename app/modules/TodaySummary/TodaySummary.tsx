@@ -153,3 +153,5 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
 });
+
+export default TodaySummary;

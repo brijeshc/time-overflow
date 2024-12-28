@@ -21,3 +21,5 @@ const styles = StyleSheet.create({
       fontFamily: 'Poppins_500Medium',
     }
   });
+
+  export default SmartInsights;

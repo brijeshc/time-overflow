@@ -45,7 +45,11 @@ Kindly check this link for ionicons list. https://icons.expo.fyi/Index
 
 ## EAS build commands
 
+Kindly check https://docs.expo.dev/build/setup/ for more information
 - `eas build --platform android`
 - `eas build --platform ios`
-- `eas build --profile development --platform android`
+- `eas build:configure` `npx expo prebuild`
+`eas build -p android --profile preview`
+
+
 - `eas build --profile development --platform ios`

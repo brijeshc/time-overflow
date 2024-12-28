@@ -117,3 +117,5 @@ const styles = StyleSheet.create({
     color: "#007AFF",
   },
 });
+
+export default EmptyStatePrompt;

@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
-import { TimeLoggingStorage } from "@/app/common/services/dataStorage";
+import { TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
-import { useThemeColor } from "@/hooks/useThemeColor";
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+interface DayStats {
+  date: string;
+  productive: number;
+  wasteful: number;
+  neutral: number;
+  totalHours: number;
+  productivityScore: number;
+}
 
 export const RecentTrends = () => {
-    const backgroundColor = useThemeColor({}, "background");
-  const [weekData, setWeekData] = useState<
-    {
-      date: string;
-      productive: number;
-      total: number;
-      score: number;
-    }[]
-  >([]);
+  const [weekData, setWeekData] = useState<DayStats[]>([]);
+  const [weeklyHighlight, setWeeklyHighlight] = useState({
+    mostProductiveDay: "",
+    totalProductiveHours: 0,
+    improvementRate: 0,
+  });
   const { refreshTrigger } = useTimeLogging();
 
   useEffect(() => {
@@ -36,136 +38,232 @@ export const RecentTrends = () => {
       const dayLogs = allLogs.filter(
         (log) => log.timestamp.split("T")[0] === date
       );
-      const productive = dayLogs.reduce((sum, log) => {
-        if (log.category === "productive") {
-          return sum + (log.hours * 60 + log.minutes);
-        }
-        return sum;
-      }, 0);
-      const total = dayLogs.reduce(
-        (sum, log) => sum + (log.hours * 60 + log.minutes),
-        0
-      );
+
+      const calculateHours = (category: string) => {
+        return dayLogs
+          .filter((log) => log.category === category)
+          .reduce((sum, log) => sum + log.hours + log.minutes / 60, 0);
+      };
+
+      const productive = calculateHours("productive");
+      const wasteful = calculateHours("wasteful");
+      const neutral = calculateHours("neutral");
+      const totalHours = productive + wasteful + neutral;
 
       return {
         date,
         productive,
-        total,
-        score: total > 0 ? (productive / total) * 100 : 0,
+        wasteful,
+        neutral,
+        totalHours,
+        productivityScore: totalHours > 0 ? (productive / totalHours) * 100 : 0,
       };
     });
 
+    // Calculate weekly highlights
+    const highlights = {
+      mostProductiveDay: weekStats.reduce((a, b) =>
+        a.productive > b.productive ? a : b
+      ).date,
+      totalProductiveHours: weekStats.reduce(
+        (sum, day) => sum + day.productive,
+        0
+      ),
+      improvementRate: calculateImprovementRate(weekStats),
+    };
+
     setWeekData(weekStats);
+    setWeeklyHighlight(highlights);
+  };
+
+  const calculateImprovementRate = (data: DayStats[]) => {
+    if (data.length < 2) return 0;
+    const firstHalf = data.slice(0, 3);
+    const secondHalf = data.slice(3);
+
+    const firstHalfAvg =
+      firstHalf.reduce((sum, day) => sum + day.productivityScore, 0) /
+      firstHalf.length;
+    const secondHalfAvg =
+      secondHalf.reduce((sum, day) => sum + day.productivityScore, 0) /
+      secondHalf.length;
+
+    return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: backgroundColor + '20' }]}>
-      <ThemedText style={styles.title}>Weekly Productivity</ThemedText>
-      <View style={styles.graphContainer}>
-        {weekData.map((day, index) => (
-          <View key={day.date} style={styles.dayColumn}>
-            <View style={styles.barContainer}>
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    height: `${day.score}%`,
-                    backgroundColor:
-                      day.score > 70
-                        ? "#4CAF50"
-                        : day.score > 40
-                        ? "#FFC107"
-                        : "#FF5252",
-                  },
-                ]}
-              />
+    <View style={styles.container}>
+      <ThemedText style={styles.title}>Weekly Progress</ThemedText>
+
+      <View style={styles.chartWrapper}>
+        <View style={styles.yAxisLabels}>
+          <ThemedText style={styles.axisLabel}>24h</ThemedText>
+          <ThemedText style={styles.axisLabel}>18h</ThemedText>
+          <ThemedText style={styles.axisLabel}>12h</ThemedText>
+          <ThemedText style={styles.axisLabel}>6h</ThemedText>
+          <ThemedText style={styles.axisLabel}>0h</ThemedText>
+        </View>
+
+        <View style={styles.graphContainer}>
+          {weekData.map((day, index) => (
+            <View key={day.date} style={styles.dayColumn}>
+              <View style={styles.stackedBar}>
+                <View
+                  style={[
+                    styles.barSegment,
+                    styles.productiveBar,
+                    { height: `${(day.productive / 24) * 100}%` },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.barSegment,
+                    styles.neutralBar,
+                    {
+                      height: `${(day.neutral / 24) * 100}%`,
+                      bottom: `${(day.productive / 24) * 100}%`,
+                    },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.barSegment,
+                    styles.wastefulBar,
+                    {
+                      height: `${(day.wasteful / 24) * 100}%`,
+                      bottom: `${((day.productive + day.neutral) / 24) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <ThemedText style={styles.dayLabel}>
+                {new Date(day.date).toLocaleDateString("en-US", {
+                  weekday: "short",
+                })}
+              </ThemedText>
+              <ThemedText style={styles.scoreLabel}>
+                {Math.round(day.productivityScore)}%
+              </ThemedText>
             </View>
-            <ThemedText style={styles.dayLabel}>
-              {DAYS[new Date(day.date).getDay()]}
-            </ThemedText>
-            <ThemedText style={styles.scoreLabel}>
-              {Math.round(day.score)}%
-            </ThemedText>
-          </View>
-        ))}
+          ))}
+        </View>
       </View>
-      <View style={styles.streakContainer}>
-        <ThemedText style={styles.streakText}>
-          {weekData.filter((day) => day.score > 70).length} productive days this
-          week
+
+      <View style={styles.highlightsContainer}>
+        <ThemedText style={styles.highlight}>
+          Most productive:{" "}
+          {new Date(weeklyHighlight.mostProductiveDay).toLocaleDateString(
+            "en-US",
+            { weekday: "long" }
+          )}
         </ThemedText>
+        <ThemedText style={styles.highlight}>
+          Weekly productive hours:{" "}
+          {Math.round(weeklyHighlight.totalProductiveHours)}
+        </ThemedText>
+        {weeklyHighlight.improvementRate !== 0 && (
+          <ThemedText
+            style={[
+              styles.highlight,
+              {
+                color:
+                  weeklyHighlight.improvementRate > 0 ? "#4CAF50" : "#FF5252",
+              },
+            ]}
+          >
+            {weeklyHighlight.improvementRate > 0 ? "↑" : "↓"}
+            {Math.abs(Math.round(weeklyHighlight.improvementRate))}% from early
+            week
+          </ThemedText>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        width: '90%',
-        padding: 20,
-        alignItems: 'center',
-        borderColor: '#3498db',
-        borderWidth: 1,
-        borderRadius: 12,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-      },
-  graphContainer: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    height: 150,
-    alignItems: "flex-end",
-  },
-  barContainer: {
-    height: 100,
-    width: 8,
-    backgroundColor: "rgba(248, 246, 246, 0.1)",
-    borderRadius: 4,
-    overflow: "hidden",
-    justifyContent: "flex-end",
+  container: {
+    width: "90%",
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: "#3498db",
+    borderWidth: 1,
   },
   title: {
     fontSize: 18,
     fontFamily: "Poppins_500Medium",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-
-  dayColumn: {
-    alignItems: "center",
+  chartWrapper: {
+    flexDirection: "row",
+    height: 200,
+    marginLeft: 10,
+  },
+  yAxisLabels: {
+    width: 30,
+    height: 150,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingRight: 8,
+  },
+  graphContainer: {
     flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  stackedBar: {
+    width: 8,
+    height: 150,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  axisLabel: {
+    fontSize: 10,
+    fontFamily: "Ubuntu_400Regular",
+    opacity: 0.7,
+  },
+  dayColumn: {
+    flex: 1,
+    alignItems: "center",
   },
 
-  bar: {
+  barSegment: {
     width: "100%",
-    borderRadius: 4,
-    opacity: 0.8,
+    position: "absolute",
+    bottom: 0,
+  },
+  productiveBar: {
+    backgroundColor: "#4CAF50",
+  },
+  neutralBar: {
+    backgroundColor: "#FFC107",
+  },
+  wastefulBar: {
+    backgroundColor: "#FF5252",
   },
   dayLabel: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 8,
     fontFamily: "Ubuntu_400Regular",
   },
   scoreLabel: {
     fontSize: 10,
     opacity: 0.7,
-    marginTop: 2,
+    marginTop: 4,
   },
-  streakContainer: {
-    marginTop: 16,
-    alignItems: "center",
+  highlightsContainer: {
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 8,
   },
-  streakText: {
+  highlight: {
     fontSize: 14,
-    fontFamily: "Poppins_500Medium",
-    opacity: 0.8,
+    fontFamily: "Ubuntu_400Regular",
+    marginVertical: 4,
   },
 });
 

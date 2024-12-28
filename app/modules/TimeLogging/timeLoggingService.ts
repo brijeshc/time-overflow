@@ -3,6 +3,7 @@ import { DailyTargets, DEFAULT_TARGETS, TimeLogEntry } from '@/app/common/interf
 
 const STORAGE_KEY = '@time_overflow_logs';
 const TARGETS_KEY = '@time_overflow_targets';
+const HOLIDAYS_KEY = '@time_overflow_holidays';
 
 export const TimeLoggingStorage = {
   async saveLogs(entry: TimeLogEntry): Promise<void> {
@@ -42,6 +43,28 @@ export const TimeLoggingStorage = {
     } catch (error) {
       console.error('Error importing logs:', error);
       throw error;
+    }
+  },
+
+  async saveHoliday(date: string): Promise<void> {
+    try {
+      const existingHolidays = await this.getHolidays();
+      existingHolidays.push(date);
+      await AsyncStorage.setItem(HOLIDAYS_KEY, JSON.stringify(existingHolidays));
+    } catch (error) {
+      console.error('Error saving holiday:', error);
+      throw error;
+    }
+  },
+
+  async getHolidays(): Promise<string[]> {
+    try {
+      const HOLIDAYS_KEY = 'holidays';
+      const holidays = await AsyncStorage.getItem(HOLIDAYS_KEY);
+      return holidays ? JSON.parse(holidays) : [];
+    } catch (error) {
+      console.error('Error retrieving holidays:', error);
+      return [];
     }
   }
 };

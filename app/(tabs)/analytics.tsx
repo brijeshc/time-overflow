@@ -19,8 +19,8 @@ export default function AnalyticsScreen() {
       <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>Analytics</ThemedText>
         <View style={styles.cardsContainer}>
-          <RecentTrends />
           <TargetAchievements />
+          <RecentTrends />
           <TimeDistribution />
           <ProductivityScore />
           <SmartInsights />

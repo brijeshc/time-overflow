@@ -211,3 +211,5 @@ const styles = StyleSheet.create({
     gap: 5,
   },
 });
+
+export default SideMenu;
