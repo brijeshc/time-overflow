@@ -83,7 +83,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   
     try {
       await TimeLoggingStorage.saveLogs(newEntry);
-      triggerRefresh();
+      triggerRefresh(); // Ensure this is called
       onComplete();
     } catch (error) {
       // Handle error appropriately

@@ -19,6 +19,7 @@ import {
   DEFAULT_TARGETS,
 } from "@/app/common/interfaces/timeLogging";
 import { TargetsStorage } from "../TimeLogging/timeLoggingService";
+import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 const { width } = Dimensions.get("window");
 
@@ -29,16 +30,14 @@ interface SideMenuProps {
 
 export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const textColor = useThemeColor({}, "text");
+  const inputBackgroundColor = useThemeColor({}, "background");
   const [targets, setTargets] = useState<DailyTargets>(DEFAULT_TARGETS);
   const [isEditingTargets, setIsEditingTargets] = useState(false);
-
-  // Add state for hours and minutes
-  const [productiveHours, setProductiveHours] = useState("0");
-  const [productiveMinutes, setProductiveMinutes] = useState("0");
+  const { triggerRefresh } = useTimeLogging();
 
   useEffect(() => {
     loadTargets();
-  }, []);
+  }, [triggerRefresh]);
 
   const loadTargets = async () => {
     const savedTargets = await TargetsStorage.getTargets();
@@ -48,14 +47,21 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const handleTargetChange = async (newTargets: DailyTargets) => {
     await TargetsStorage.saveTargets(newTargets);
     setTargets(newTargets);
+    triggerRefresh();
   };
 
-  const handleTimeTargetChange = () => {
-    const totalHours = Number(productiveHours) + Number(productiveMinutes) / 60;
-    handleTargetChange({
-      ...targets,
-      productiveHours: totalHours,
-    });
+  const handleInputChange = (field: keyof DailyTargets, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setTargets((prev) => ({
+      ...prev,
+      [field]: numValue,
+    }));
+  };
+
+  const handleSaveTargets = async () => {
+    await TargetsStorage.saveTargets(targets);
+    triggerRefresh();
+    setIsEditingTargets(false);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -88,32 +94,60 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
           {isEditingTargets && (
             <View style={styles.targetInputs}>
               <ThemedText style={styles.inputLabel}>
-                Daily Productive Time Target
+                Daily Productive Time Target (hours)
               </ThemedText>
-              <View style={styles.timeInputContainer}>
-                <View style={styles.timeInput}>
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    value={productiveHours}
-                    onChangeText={setProductiveHours}
-                    onEndEditing={handleTimeTargetChange}
-                    keyboardType="numeric"
-                    placeholder="Hours"
-                  />
-                  <ThemedText>hrs</ThemedText>
-                </View>
-                <View style={styles.timeInput}>
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    value={productiveMinutes}
-                    onChangeText={setProductiveMinutes}
-                    onEndEditing={handleTimeTargetChange}
-                    keyboardType="numeric"
-                    placeholder="Minutes"
-                  />
-                  <ThemedText>min</ThemedText>
-                </View>
-              </View>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: inputBackgroundColor, color: textColor },
+                ]}
+                keyboardType="numeric"
+                value={String(targets.productiveHours)}
+                onChangeText={(value) =>
+                  handleInputChange("productiveHours", value)
+                }
+                placeholder="0"
+                placeholderTextColor={textColor}
+              />
+
+              <ThemedText style={styles.inputLabel}>
+                Daily Wasteful Time Limit (hours)
+              </ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: inputBackgroundColor, color: textColor },
+                ]}
+                keyboardType="numeric"
+                value={String(targets.wastefulMaxHours)}
+                onChangeText={(value) =>
+                  handleInputChange("wastefulMaxHours", value)
+                }
+                placeholder="0"
+              />
+
+              <ThemedText style={styles.inputLabel}>
+                Daily Neutral Time Limit (hours)
+              </ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: inputBackgroundColor, color: textColor },
+                ]}
+                keyboardType="numeric"
+                value={String(targets.neutralMaxHours)}
+                onChangeText={(value) =>
+                  handleInputChange("neutralMaxHours", value)
+                }
+                placeholder="0"
+              />
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveTargets}
+              >
+                <ThemedText style={styles.saveButtonText}>Save</ThemedText>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -177,7 +211,6 @@ const styles = StyleSheet.create({
     fontFamily: "Ubuntu_400Regular",
   },
   input: {
-    flex: 1,
     borderWidth: 1,
     borderColor: "#3498db",
     borderRadius: 8,
@@ -185,8 +218,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Ubuntu_400Regular",
     minWidth: 80,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    // color: "#fff", // This ensures text is visible in dark mode
   },
   percentageInput: {
     width: "100%",
@@ -209,6 +240,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+  },
+  saveButton: {
+    backgroundColor: "#3498db",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
   },
 });
 

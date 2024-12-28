@@ -9,18 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.timeoverflow.app",
-      "runtimeVersion": "1.0.0"
+      "package": "com.timeoverflow.app"
     },
     "web": {
       "bundler": "metro",
@@ -51,9 +47,6 @@
         "projectId": "7ee1fdcc-f292-4d3a-802b-f8c2ea7bea8e"
       }
     },
-    "owner": "brijeshc2049",
-    "updates": {
-      "url": "https://u.expo.dev/7ee1fdcc-f292-4d3a-802b-f8c2ea7bea8e"
-    }
+    "owner": "brijeshc2049"
   }
 }

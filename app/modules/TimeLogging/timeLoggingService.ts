@@ -59,12 +59,22 @@ export const TimeLoggingStorage = {
 
   async getHolidays(): Promise<string[]> {
     try {
-      const HOLIDAYS_KEY = 'holidays';
       const holidays = await AsyncStorage.getItem(HOLIDAYS_KEY);
       return holidays ? JSON.parse(holidays) : [];
     } catch (error) {
       console.error('Error retrieving holidays:', error);
       return [];
+    }
+  },
+
+  async unmarkHoliday(date: string): Promise<void> {
+    try {
+      const existingHolidays = await this.getHolidays();
+      const updatedHolidays = existingHolidays.filter(holiday => holiday !== date);
+      await AsyncStorage.setItem(HOLIDAYS_KEY, JSON.stringify(updatedHolidays));
+    } catch (error) {
+      console.error('Error unmarking holiday:', error);
+      throw error;
     }
   }
 };
