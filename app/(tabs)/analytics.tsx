@@ -8,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import DailySummary from "../modules/DailySummary/DailySummary";
+import AllTimeData from "../modules/Analytics/AllTimeData";
 
 export default function AnalyticsScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -20,11 +21,11 @@ export default function AnalyticsScreen() {
       <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>Analytics</ThemedText>
         <View style={styles.cardsContainer}>
-          <DailySummary />
+          {/* <DailySummary /> */}
+          <TimeDistribution />
           <RecentTrends />
           <TargetAchievements />
-
-          <TimeDistribution />
+          <AllTimeData/>  
           <ProductivityScore />
           <SmartInsights />
         </View>
