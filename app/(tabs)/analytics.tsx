@@ -27,7 +27,7 @@ export default function AnalyticsScreen() {
           <TargetAchievements />
           <AllTimeData/>  
           <ProductivityScore />
-          <SmartInsights />
+          {/* <SmartInsights /> */}
         </View>
       </ThemedView>
     </ScrollView>
@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: "Poppins_500Medium",
+    marginTop: 10,
     marginBottom: 20,
   },
 });

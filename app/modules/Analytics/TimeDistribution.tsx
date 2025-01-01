@@ -5,7 +5,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { TimeLoggingStorage } from '../TimeLogging/timeLoggingService';
 import { TimeLogEntry } from '@/app/common/interfaces/timeLogging';
 import { Svg, Line, G, Text, Circle } from 'react-native-svg';
-import { useTimeLogging } from '@/app/context/TimeLoggingContext';
+import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 const { width } = Dimensions.get('window');
 

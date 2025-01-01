@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   TextInput,
+  Alert,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -14,11 +15,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import * as DocumentPicker from 'expo-document-picker';
 import {
   DailyTargets,
   DEFAULT_TARGETS,
 } from "@/app/common/interfaces/timeLogging";
-import { TargetsStorage } from "../TimeLogging/timeLoggingService";
+import { TargetsStorage, TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 const { width } = Dimensions.get("window");
@@ -33,6 +35,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const inputBackgroundColor = useThemeColor({}, "background");
   const [targets, setTargets] = useState<DailyTargets>(DEFAULT_TARGETS);
   const [isEditingTargets, setIsEditingTargets] = useState(false);
+  const [isBackupVisible, setIsBackupVisible] = useState(false);
   const { triggerRefresh } = useTimeLogging();
 
   useEffect(() => {
@@ -64,6 +67,15 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
     setIsEditingTargets(false);
   };
 
+  const handleShare = async () => {
+    try {
+      await TimeLoggingStorage.shareLogsFile();
+      console.log("Logs shared successfully.");
+    } catch (error) {
+      console.error("Error sharing logs:", error);
+    }
+  };
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: withSpring(isVisible ? 0 : width) }],
   }));
@@ -72,9 +84,9 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
     <Animated.View style={[styles.container, animatedStyle]}>
       <ThemedView style={styles.menu}>
         <View style={styles.header}>
-          <ThemedText style={styles.title}>Settings</ThemedText>
+          <ThemedText style={styles.title}>Preferences</ThemedText>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={24} color={textColor} />
+            <Ionicons name="close" size={28} color={textColor} />
           </TouchableOpacity>
         </View>
 
@@ -151,6 +163,28 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
             </View>
           )}
         </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => setIsBackupVisible(!isBackupVisible)}
+          >
+            <ThemedText style={styles.sectionTitle}>Backup Data</ThemedText>
+            <Ionicons
+              name={isBackupVisible ? "chevron-up" : "chevron-down"}
+              size={24}
+              color={textColor}
+            />
+          </TouchableOpacity>
+
+          {isBackupVisible && (
+            <View style={styles.backupContainer}>
+              <TouchableOpacity onPress={handleShare} style={styles.button}>
+                <ThemedText style={styles.buttonText}>Export Time Logs</ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </ThemedView>
     </Animated.View>
   );
@@ -184,10 +218,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 10,
     marginBottom: 30,
   },
   title: {
     fontSize: 24,
+    paddingTop: 10,
     fontFamily: "Poppins_500Medium",
   },
   section: {
@@ -204,7 +240,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
   },
-
   inputLabel: {
     marginBottom: 5,
     fontSize: 14,
@@ -242,13 +277,29 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   saveButton: {
-    backgroundColor: "#3498db",
+    borderColor: "#3498db",
+    borderWidth: 1,
     padding: 10,
     borderRadius: 8,
+    marginTop: 10,
     alignItems: "center",
   },
   saveButtonText: {
-    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
+  },
+  backupContainer: {
+    marginTop: 10,
+  },
+  button: {
+    padding: 15,
+    borderColor: '#007AFF',
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {
     fontSize: 16,
     fontFamily: "Poppins_500Medium",
   },

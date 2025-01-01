@@ -103,7 +103,7 @@ export default function HomeScreen() {
           {!showLogging ? (
             <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
               <TouchableOpacity style={styles.logButton} onPress={handlePress}>
-                <Ionicons name="time-outline" size={24} color="#007AFF" />
+                <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
                 <ThemedText style={styles.buttonText}>Log Your Time</ThemedText>
               </TouchableOpacity>
             </Animated.View>
