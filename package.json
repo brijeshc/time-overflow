@@ -21,6 +21,7 @@
     "@expo-google-fonts/ubuntu": "^0.2.3",
     "@expo/vector-icons": "^14.0.4",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/slider": "4.5.5",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
@@ -36,6 +37,7 @@
     "expo-haptics": "~14.0.0",
     "expo-linear-gradient": "~14.0.1",
     "expo-linking": "~7.0.3",
+    "expo-notifications": "~0.29.11",
     "expo-router": "~4.0.15",
     "expo-sharing": "~13.0.0",
     "expo-splash-screen": "~0.29.18",
@@ -58,7 +60,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "undefined": "react-native-community/datetimepicker"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

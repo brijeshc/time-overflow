@@ -5,8 +5,11 @@ import {
   TouchableOpacity,
   View,
   TextInput,
+  Switch,
   Alert,
+  Modal,
 } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, {
   useAnimatedStyle,
   withSpring,
@@ -15,13 +18,21 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import * as DocumentPicker from 'expo-document-picker';
 import {
   DailyTargets,
   DEFAULT_TARGETS,
 } from "@/app/common/interfaces/timeLogging";
-import { TargetsStorage, TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
+import {
+  TargetsStorage,
+  TimeLoggingStorage,
+} from "../TimeLogging/timeLoggingService";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
+import {
+  cancelDailyNotification,
+  checkAndScheduleNotification,
+  scheduleDailyNotification,
+} from "../../common/services/notificationService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
@@ -36,15 +47,30 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const [targets, setTargets] = useState<DailyTargets>(DEFAULT_TARGETS);
   const [isEditingTargets, setIsEditingTargets] = useState(false);
   const [isBackupVisible, setIsBackupVisible] = useState(false);
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
+  const [notificationTime, setNotificationTime] = useState(new Date(0, 0, 0, 21, 0));
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const { triggerRefresh } = useTimeLogging();
 
   useEffect(() => {
     loadTargets();
+    loadNotificationPreference();
   }, [triggerRefresh]);
 
   const loadTargets = async () => {
     const savedTargets = await TargetsStorage.getTargets();
     setTargets(savedTargets);
+  };
+
+  const loadNotificationPreference = async () => {
+    const notificationId = await AsyncStorage.getItem("@daily_notification");
+    setIsNotificationEnabled(!!notificationId);
+
+    const notificationTime = await AsyncStorage.getItem("@daily_notification_time");
+    if (notificationTime) {
+      const { hour, minute } = JSON.parse(notificationTime);
+      setNotificationTime(new Date(0, 0, 0, hour, minute));
+    }
   };
 
   const handleTargetChange = async (newTargets: DailyTargets) => {
@@ -73,6 +99,43 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
       console.log("Logs shared successfully.");
     } catch (error) {
       console.error("Error sharing logs:", error);
+    }
+  };
+
+  const handleNotificationToggle = async () => {
+    if (isNotificationEnabled) {
+      await cancelDailyNotification();
+      Alert.alert(
+        "Notification Disabled",
+        "Daily reminder notifications have been disabled."
+      );
+    } else {
+      const hour = notificationTime.getHours();
+      const minute = notificationTime.getMinutes();
+      await scheduleDailyNotification(hour, minute);
+      Alert.alert(
+        "Notification Enabled",
+        "Daily reminder notifications have been enabled."
+      );
+    }
+    setIsNotificationEnabled(!isNotificationEnabled);
+  };
+
+  const handleTimeChange = async (event: any, selectedTime: Date | undefined) => {
+    if (selectedTime) {
+      setNotificationTime(selectedTime);
+      setShowTimePicker(false);
+      if (isNotificationEnabled) {
+        const hour = selectedTime.getHours();
+        const minute = selectedTime.getMinutes();
+        await scheduleDailyNotification(hour, minute);
+        Alert.alert(
+          "Notification Time Updated",
+          `Daily reminder notifications will be sent at ${hour}:${minute < 10 ? '0' : ''}${minute}.`
+        );
+      }
+    } else {
+      setShowTimePicker(false);
     }
   };
 
@@ -185,7 +248,43 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
             </View>
           )}
         </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ThemedText style={styles.sectionTitle}>Reminder Notification</ThemedText>
+            <Switch
+              value={isNotificationEnabled}
+              onValueChange={handleNotificationToggle}
+            />
+          </View>
+          <ThemedText style={styles.infoText}>
+            Enable this to receive daily reminders if you haven't logged enough productive hours.
+          </ThemedText>
+          <TouchableOpacity onPress={() => setShowTimePicker(true)}>
+            <ThemedText style={styles.timePickerText}>
+              {`Notification Time: ${notificationTime.getHours()}:${notificationTime.getMinutes() < 10 ? '0' : ''}${notificationTime.getMinutes()}`}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
+
+      {showTimePicker && (
+        <Modal transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <DateTimePicker
+                value={notificationTime}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
+              />
+              <TouchableOpacity onPress={() => setShowTimePicker(false)} style={styles.modalCloseButton}>
+                <ThemedText style={styles.modalCloseButtonText}>Close</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </Animated.View>
   );
 };
@@ -293,13 +392,48 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 15,
-    borderColor: '#007AFF',
+    borderColor: "#007AFF",
     borderWidth: 1,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
   },
   buttonText: {
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
+  },
+  infoText: {
+    fontSize: 14,
+    fontFamily: "Ubuntu_400Regular",
+    color: "#888",
+    marginTop: 10,
+  },
+  timePickerText: {
+    fontSize: 16,
+    fontFamily: "Ubuntu_400Regular",
+    color: "#007AFF",
+    marginTop: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#007AFF",
+    borderRadius: 5,
+  },
+  modalCloseButtonText: {
+    color: "#fff",
     fontSize: 16,
     fontFamily: "Poppins_500Medium",
   },
