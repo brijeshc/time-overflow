@@ -8,7 +8,6 @@ import {
   TimeLogEntry,
   DailyTargets,
 } from "@/app/common/interfaces/timeLogging";
-import { SchedulableTriggerInputTypes } from "expo-notifications";
 
 const NOTIFICATION_KEY = "@daily_notification";
 const NOTIFICATION_TIME_KEY = "@daily_notification_time";
@@ -19,6 +18,9 @@ export const scheduleDailyNotification = async (hour: number, minute: number) =>
     await Notifications.requestPermissionsAsync();
   }
 
+  // Cancel any existing notification before scheduling a new one
+  await cancelDailyNotification();
+
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
       title: "Daily Reminder",
@@ -27,7 +29,7 @@ export const scheduleDailyNotification = async (hour: number, minute: number) =>
     trigger: {
       hour,
       minute,
-      type: SchedulableTriggerInputTypes.DAILY,
+      type: Notifications.SchedulableTriggerInputTypes.DAILY
     },
   });
 

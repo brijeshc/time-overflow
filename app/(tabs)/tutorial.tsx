@@ -17,14 +17,15 @@ export default function Tutorial() {
         <ThemedText style={[styles.paragraph, { color: textColor }]}>
           Time Overflow is designed to help you track your time efficiently and
           improve your productivity. This app is designed to act as a behavioral
-          nudge to be consicious of how you spend your time. And then gradually
-          move towards a more productive lifestyle. The more you log your time,
-          the more you will understand how you spend your time. Ofcourse not all
-          activities can be categorized as productive, neutral or wasteful. Some
-          of our Karma (actions) have values beyond the simple categorization.
-          No app should dictate your Karma. This app's domain is limited to
-          lower order Karma (actions). Here’s how you can make the most out of
-          the app:
+          nudge to make you aware of how you spend your time. And then
+          consciously move towards a more productive lifestyle. The more you log
+          your time, the more you will understand how you spend your time.
+          Ofcourse not all activities can be categorized as productive, neutral
+          or wasteful. Some of our Karma (actions) have values beyond the simple
+          categorization. The app is not indented to track quaility time you
+          spend with your family, or the time you spend on mundane routine, etc.
+          Although you can log everything you want. Here’s how you can make the
+          most out of the app:
         </ThemedText>
         <ThemedText style={[styles.subtitle, { color: textColor }]}>
           1. Logging Time
