@@ -46,10 +46,21 @@ Kindly check this link for ionicons list. https://icons.expo.fyi/Index
 ## EAS build commands
 
 Kindly check https://docs.expo.dev/build/setup/ for more information
+before each build: clean cd android
+./gradlew clean
+cd ..
 - `eas build --platform android`
 - `eas build --platform ios`
 - `eas build:configure` `npx expo prebuild`
 `eas build -p android --profile preview`
+
+For clean build
+cd android
+./gradlew clean
+cd ..
+rm -rf node_modules
+npm install
+npx expo prebuild --clean
 
 
 - `eas build --profile development --platform ios`
