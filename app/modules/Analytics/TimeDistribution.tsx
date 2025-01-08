@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { TimeLoggingStorage } from '../TimeLogging/timeLoggingService';
-import { TimeLogEntry } from '@/app/common/interfaces/timeLogging';
+import { TimeLoggingStorage } from '../../common/services/dataStorage';
 import { Svg, Line, G, Text, Circle } from 'react-native-svg';
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 const { width } = Dimensions.get('window');
 
 export const TimeDistribution = () => {
-  const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const { refreshTrigger } = useTimeLogging();
   const [chartData, setChartData] = useState<{
@@ -31,9 +29,7 @@ export const TimeDistribution = () => {
 
   const loadChartData = async () => {
     try {
-      const allLogs = await TimeLoggingStorage.getAllLogs();
-      const groupedLogs = groupLogsByDate(allLogs);
-
+      const groupedLogs = await TimeLoggingStorage.groupLogsByDate();
       const labels = Object.keys(groupedLogs);
       const productiveData = labels.map(date => groupedLogs[date].productive);
       const wastefulData = labels.map(date => groupedLogs[date].wasteful);
@@ -50,18 +46,6 @@ export const TimeDistribution = () => {
     } catch (error) {
       console.error('Error loading chart data:', error);
     }
-  };
-
-  const groupLogsByDate = (logs: TimeLogEntry[]) => {
-    return logs.reduce((acc, log) => {
-      const date = log.timestamp.split('T')[0];
-      if (!acc[date]) {
-        acc[date] = { productive: 0, wasteful: 0, neutral: 0 };
-      }
-      const minutes = log.hours * 60 + log.minutes;
-      acc[date][log.category] += minutes;
-      return acc;
-    }, {} as { [key: string]: { productive: number; wasteful: number; neutral: number } });
   };
 
   const renderLineChart = () => {

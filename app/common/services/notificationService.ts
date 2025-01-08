@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   TargetsStorage,
   TimeLoggingStorage,
-} from "@/app/modules/TimeLogging/timeLoggingService";
+} from "@/app/common/services/dataStorage";
 import {
   TimeLogEntry,
   DailyTargets,

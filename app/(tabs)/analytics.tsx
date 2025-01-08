@@ -9,9 +9,21 @@ import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import DailySummary from "../modules/DailySummary/DailySummary";
 import AllTimeData from "../modules/Analytics/AllTimeData";
+import { useEffect } from "react";
+import { useTimeLogging } from "../context/TimeLoggingContext";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function AnalyticsScreen() {
   const backgroundColor = useThemeColor({}, "background");
+
+  const { triggerRefresh } = useTimeLogging();
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused) {
+      console.log("Analytics screen focused - refreshing data");
+      triggerRefresh();
+    }
+  }, [isFocused]);
 
   return (
     <ScrollView
@@ -25,7 +37,7 @@ export default function AnalyticsScreen() {
           <TimeDistribution />
           <RecentTrends />
           <TargetAchievements />
-          <AllTimeData/>  
+          <AllTimeData />
           <ProductivityScore />
           {/* <SmartInsights /> */}
         </View>

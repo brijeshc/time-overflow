@@ -25,7 +25,7 @@ import {
 import {
   TargetsStorage,
   TimeLoggingStorage,
-} from "../TimeLogging/timeLoggingService";
+} from "../../common/services/dataStorage";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 import {
   cancelDailyNotification,

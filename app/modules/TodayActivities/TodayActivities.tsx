@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Alert
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
+import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
@@ -60,13 +55,14 @@ export const TodayActivities = () => {
 
   const deleteSelectedActivities = async () => {
     try {
-      const updatedLogs = todayActivities.filter(
-        activity => !selectedActivities.includes(activity.id)
+      const todayLogs = await TimeLoggingStorage.getTodayLogs();
+      const updatedTodayLogs = todayLogs.filter(
+        (activity) => !selectedActivities.includes(activity.id)
       );
-      await TimeLoggingStorage.importLogs(JSON.stringify(updatedLogs));
-      setTodayActivities(updatedLogs);
+      await TimeLoggingStorage.updateTodayLogs(updatedTodayLogs);
+      setTodayActivities(updatedTodayLogs);
       setSelectedActivities([]);
-      triggerRefresh(); // Trigger refresh after successful deletion
+      triggerRefresh();
     } catch (error) {
       Alert.alert("Error", "Failed to delete activities");
     }
@@ -94,6 +90,15 @@ export const TodayActivities = () => {
       wasteful: "#FF5252",
     };
     return colors[category] || colors.neutral;
+  };
+
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   if (todayActivities.length === 0) return null;
@@ -132,9 +137,16 @@ export const TodayActivities = () => {
               />
             </View>
             <View style={styles.activityContent}>
-              <ThemedText style={styles.activityName}>
-                {activity.activity}
-              </ThemedText>
+              <View style={styles.activityInfo}>
+                <View style={styles.nameTimeContainer}>
+                  <ThemedText style={styles.activityName}>
+                    {activity.activity}
+                  </ThemedText>
+                  <ThemedText style={styles.timeStamp}>
+                    {` • ${formatTime(activity.timestamp)}`}
+                  </ThemedText>
+                </View>
+              </View>
               <ThemedText style={styles.activityTime}>
                 {`${activity.hours}h ${activity.minutes}m`}
               </ThemedText>
@@ -192,15 +204,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  activityName: {
-    fontSize: 16,
-    fontFamily: "Ubuntu_400Regular",
-  },
-  activityTime: {
-    fontSize: 14,
-    fontFamily: "Poppins_500Medium",
-    opacity: 0.8,
-  },
   deleteButton: {
     backgroundColor: "#FF5252",
     padding: 15,
@@ -214,17 +217,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   progressBarContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 4,
     left: 8,
     right: 8,
     height: 4,
-    backgroundColor: 'rgba(200, 200, 200, 0.15)',
+    backgroundColor: "rgba(200, 200, 200, 0.15)",
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBar: {
-    height: '100%',
+    height: "100%",
     opacity: 0.8,
     borderRadius: 8,
     // Add subtle gradient effect through shadow
@@ -235,6 +238,29 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 1,
+  },
+  activityInfo: {
+    flex: 1,
+    flexDirection: "column",
+    gap: 4,
+  },
+  nameTimeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  activityName: {
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
+  },
+  timeStamp: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    opacity: 0.6,
+  },
+  activityTime: {
+    fontSize: 14,
+    fontFamily: "Poppins_500Medium",
+    opacity: 0.8,
   },
 });
 

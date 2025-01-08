@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
+import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 interface DayStats {

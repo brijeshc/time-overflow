@@ -13,7 +13,7 @@ import { ThemedView } from "@/components/ThemedView";
 import React, { useState } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
-import { TimeLoggingStorage } from "./timeLoggingService";
+import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
 import { nanoid } from 'nanoid/non-secure';
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";

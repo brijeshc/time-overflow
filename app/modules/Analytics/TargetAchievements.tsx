@@ -3,13 +3,13 @@ import { View, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { Dialog } from "@rneui/themed";
 import { Calendar } from "react-native-calendars";
-import { TimeLoggingStorage } from "../TimeLogging/timeLoggingService";
+import { TimeLoggingStorage } from "@/app/common/services/dataStorage";
 import {
   DEFAULT_TARGETS,
   TimeLogEntry,
 } from "@/app/common/interfaces/timeLogging";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { TargetsStorage } from "../TimeLogging/timeLoggingService";
+import { TargetsStorage } from "@/app/common/services/dataStorage";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 interface DayDetails {
@@ -106,10 +106,12 @@ export const TargetAchievements = () => {
       dateMap[date] = {
         selected: true,
         // If it's both productive and holiday, use a gradient-like color
-        selectedColor: isProductiveHoliday ? "#1E88E5" : "rgba(52, 152, 219, 0.5)",
+        selectedColor: isProductiveHoliday
+          ? "#1E88E5"
+          : "rgba(52, 152, 219, 0.5)",
         marked: true,
         // If it's both productive and holiday, use green dot to indicate productivity
-        dotColor: isProductiveHoliday ? "#4CAF50" : "#3498db",
+        dotColor: isProductiveHoliday ? "#4CAF50" : "#ffffff",
       };
     });
 
@@ -172,7 +174,7 @@ export const TargetAchievements = () => {
         return "#808080";
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <ThemedText style={styles.title}>Activity Calendar</ThemedText>
@@ -281,7 +283,12 @@ export const TargetAchievements = () => {
           <ThemedText style={styles.legendText}>Neutral Day</ThemedText>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: "rgba(52, 152, 219, 0.5)" }]} />
+          <View
+            style={[
+              styles.legendColor,
+              { backgroundColor: "rgba(52, 152, 219, 0.5)" },
+            ]}
+          />
           <ThemedText style={styles.legendText}>Holiday</ThemedText>
         </View>
         <View style={styles.legendItem}>
@@ -334,13 +341,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Poppins_400Regular",
     flexShrink: 1, // Allows text to wrap if needed
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   legendDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    position: 'absolute',
+    position: "absolute",
     left: 13, // Position dot to overlap with legendColor
     top: 13,
   },

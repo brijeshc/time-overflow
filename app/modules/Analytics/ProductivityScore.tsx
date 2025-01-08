@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-import { TimeLoggingStorage } from '../TimeLogging/timeLoggingService';
+import { TimeLoggingStorage } from '../../common/services/dataStorage';
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';

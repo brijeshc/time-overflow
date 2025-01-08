@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { TimeLoggingStorage } from '../TimeLogging/timeLoggingService';
+import { TimeLoggingStorage } from '../../common/services/dataStorage';
 import { ThemedText } from '@/components/ThemedText';
 
 export const TimeLogBackup = () => {
