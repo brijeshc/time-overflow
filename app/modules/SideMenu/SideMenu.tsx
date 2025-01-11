@@ -9,7 +9,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import Animated, {
   useAnimatedStyle,
   withSpring,
@@ -33,6 +33,7 @@ import {
   scheduleDailyNotification,
 } from "../../common/services/notificationService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Linking } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -48,7 +49,9 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const [isEditingTargets, setIsEditingTargets] = useState(false);
   const [isBackupVisible, setIsBackupVisible] = useState(false);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
-  const [notificationTime, setNotificationTime] = useState(new Date(0, 0, 0, 21, 0));
+  const [notificationTime, setNotificationTime] = useState(
+    new Date(0, 0, 0, 21, 0)
+  );
   const [showTimePicker, setShowTimePicker] = useState(false);
   const { triggerRefresh } = useTimeLogging();
 
@@ -58,25 +61,28 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   }, [triggerRefresh]);
 
   const loadTargets = async () => {
-    const savedTargets = await TargetsStorage.getTargets();
-    setTargets(savedTargets);
+    try {
+      const currentTargets = await TargetsStorage.getTargetsForDate(
+        new Date().toISOString()
+      );
+      setTargets(currentTargets);
+    } catch (error) {
+      console.error("Error loading targets:", error);
+      setTargets(DEFAULT_TARGETS);
+    }
   };
 
   const loadNotificationPreference = async () => {
     const notificationId = await AsyncStorage.getItem("@daily_notification");
     setIsNotificationEnabled(!!notificationId);
 
-    const notificationTime = await AsyncStorage.getItem("@daily_notification_time");
+    const notificationTime = await AsyncStorage.getItem(
+      "@daily_notification_time"
+    );
     if (notificationTime) {
       const { hour, minute } = JSON.parse(notificationTime);
       setNotificationTime(new Date(0, 0, 0, hour, minute));
     }
-  };
-
-  const handleTargetChange = async (newTargets: DailyTargets) => {
-    await TargetsStorage.saveTargets(newTargets);
-    setTargets(newTargets);
-    triggerRefresh();
   };
 
   const handleInputChange = (field: keyof DailyTargets, value: string) => {
@@ -88,9 +94,22 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   };
 
   const handleSaveTargets = async () => {
-    await TargetsStorage.saveTargets(targets);
-    triggerRefresh();
-    setIsEditingTargets(false);
+    const newTargets = {
+      ...targets,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await TargetsStorage.saveTargets(newTargets);
+      triggerRefresh();
+      setIsEditingTargets(false);
+      Alert.alert(
+        "Targets Updated",
+        "New targets will apply to future time logs. Previous logs will maintain their original targets."
+      );
+    } catch (error) {
+      Alert.alert("Error", "Failed to save targets");
+    }
   };
 
   const handleShare = async () => {
@@ -121,7 +140,10 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
     setIsNotificationEnabled(!isNotificationEnabled);
   };
 
-  const handleTimeChange = async (event: any, selectedTime: Date | undefined) => {
+  const handleTimeChange = async (
+    event: any,
+    selectedTime: Date | undefined
+  ) => {
     if (selectedTime) {
       setNotificationTime(selectedTime);
       setShowTimePicker(false);
@@ -131,7 +153,9 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
         await scheduleDailyNotification(hour, minute);
         Alert.alert(
           "Notification Time Updated",
-          `Daily reminder notifications will be sent at ${hour}:${minute < 10 ? '0' : ''}${minute}.`
+          `Daily reminder notifications will be sent at ${hour}:${
+            minute < 10 ? "0" : ""
+          }${minute}.`
         );
       }
     } else {
@@ -243,7 +267,9 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
           {isBackupVisible && (
             <View style={styles.backupContainer}>
               <TouchableOpacity onPress={handleShare} style={styles.button}>
-                <ThemedText style={styles.buttonText}>Export Time Logs</ThemedText>
+                <ThemedText style={styles.buttonText}>
+                  Export Time Logs
+                </ThemedText>
               </TouchableOpacity>
             </View>
           )}
@@ -251,18 +277,23 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Reminder Notification</ThemedText>
+            <ThemedText style={styles.sectionTitle}>
+              Reminder Notification
+            </ThemedText>
             <Switch
               value={isNotificationEnabled}
               onValueChange={handleNotificationToggle}
             />
           </View>
           <ThemedText style={styles.infoText}>
-            Enable this to receive daily reminders if you haven't logged enough productive hours.
+            Enable this to receive daily reminders if you haven't logged enough
+            productive hours.
           </ThemedText>
           <TouchableOpacity onPress={() => setShowTimePicker(true)}>
             <ThemedText style={styles.timePickerText}>
-              {`Notification Time: ${notificationTime.getHours()}:${notificationTime.getMinutes() < 10 ? '0' : ''}${notificationTime.getMinutes()}`}
+              {`Notification Time: ${notificationTime.getHours()}:${
+                notificationTime.getMinutes() < 10 ? "0" : ""
+              }${notificationTime.getMinutes()}`}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -278,8 +309,13 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
                 display="default"
                 onChange={handleTimeChange}
               />
-              <TouchableOpacity onPress={() => setShowTimePicker(false)} style={styles.modalCloseButton}>
-                <ThemedText style={styles.modalCloseButtonText}>Close</ThemedText>
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(false)}
+                style={styles.modalCloseButton}
+              >
+                <ThemedText style={styles.modalCloseButtonText}>
+                  Close
+                </ThemedText>
               </TouchableOpacity>
             </View>
           </View>

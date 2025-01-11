@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { Dialog } from "@rneui/themed";
 import { Calendar } from "react-native-calendars";
@@ -41,21 +41,24 @@ export const TargetAchievements = () => {
   }, [refreshTrigger]);
 
   const loadTargets = async () => {
-    const targets = await TargetsStorage.getTargets();
+    const targets = await TargetsStorage.getTargetsForDate(
+      new Date().toISOString().split("T")[0]
+    );
     setDailyTargets(targets);
   };
 
   const loadAchievements = async () => {
     const logs = await TimeLoggingStorage.getAllLogs();
     const holidays = await TimeLoggingStorage.getHolidays();
-    const dateMap = processLogsForCalendar(logs, holidays);
+    const dateMap = await processLogsForCalendar(logs, holidays);
     setMarkedDates(dateMap);
   };
 
-  const processLogsForCalendar = (logs: TimeLogEntry[], holidays: string[]) => {
+  const processLogsForCalendar = async (
+    logs: TimeLogEntry[],
+    holidays: string[]
+  ) => {
     const dateMap: MarkedDates = {};
-
-    // Process activity logs first
     const groupedLogs = logs.reduce<Record<string, TimeLogEntry[]>>(
       (acc, log) => {
         const date = log.timestamp.split("T")[0];
@@ -66,7 +69,8 @@ export const TargetAchievements = () => {
       {}
     );
 
-    Object.entries(groupedLogs).forEach(([date, dayLogs]) => {
+    for (const [date, dayLogs] of Object.entries(groupedLogs)) {
+      const dailyTargets = await TargetsStorage.getTargetsForDate(date);
       const totals = {
         productive: 0,
         wasteful: 0,
@@ -96,28 +100,26 @@ export const TargetAchievements = () => {
         selectedColor: color,
         marked: false,
       };
-    });
+    }
 
-    // Now process holidays and combine with productive days
+    // Process holidays
     holidays.forEach((date) => {
       const existingDate = dateMap[date];
-      const isProductiveHoliday = existingDate?.selectedColor === "#4CAF50";
-
       dateMap[date] = {
+        ...existingDate,
         selected: true,
-        // If it's both productive and holiday, use a gradient-like color
-        selectedColor: isProductiveHoliday
-          ? "#1E88E5"
-          : "rgba(52, 152, 219, 0.5)",
+        selectedColor:
+          existingDate?.selectedColor === "#4CAF50"
+            ? "#1E88E5"
+            : "rgba(52, 152, 219, 0.5)",
         marked: true,
-        // If it's both productive and holiday, use green dot to indicate productivity
-        dotColor: isProductiveHoliday ? "#4CAF50" : "#ffffff",
+        dotColor:
+          existingDate?.selectedColor === "#4CAF50" ? "#4CAF50" : "#ffffff",
       };
     });
 
     return dateMap;
   };
-
   const onDayPress = async (day: any) => {
     const logs = await TimeLoggingStorage.getAllLogs();
     const selectedDayLogs = logs.filter(
@@ -231,20 +233,22 @@ export const TargetAchievements = () => {
               : ""}
           </ThemedText>
 
-          {dayLogs.map((log) => (
-            <View key={log.id} style={styles.logItem}>
-              <ThemedText>{log.activity}</ThemedText>
-              <ThemedText>
-                {log.hours}h {log.minutes}m
-              </ThemedText>
-              <View
-                style={[
-                  styles.categoryIndicator,
-                  { backgroundColor: getCategoryColor(log.category) },
-                ]}
-              />
-            </View>
-          ))}
+          <ScrollView style={styles.logsScrollView}>
+            {dayLogs.map((log) => (
+              <View key={log.id} style={styles.logItem}>
+                <ThemedText>{log.activity}</ThemedText>
+                <ThemedText>
+                  {log.hours}h {log.minutes}m
+                </ThemedText>
+                <View
+                  style={[
+                    styles.categoryIndicator,
+                    { backgroundColor: getCategoryColor(log.category) },
+                  ]}
+                />
+              </View>
+            ))}
+          </ScrollView>
         </View>
         <Dialog.Actions>
           {isHoliday(selectedDate!) ? (
@@ -363,10 +367,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    maxHeight: "80%",
+    width: "100%",
   },
   modalContent: {
     width: "90%",
@@ -375,9 +377,14 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: "80%",
   },
+  logsScrollView: {
+    maxHeight: 400,
+    marginVertical: 10,
+  },
   modalTitle: {
     fontSize: 18,
     fontFamily: "Poppins_500Medium",
+    textAlign: "center",
     marginBottom: 16,
   },
   logItem: {
@@ -385,8 +392,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "rgba(150, 150, 150, 0.2)",
   },
   categoryIndicator: {
     width: 12,

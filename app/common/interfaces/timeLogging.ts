@@ -20,11 +20,16 @@ export interface DailyTargets {
   productiveHours: number;
   wastefulMaxHours: number;
   neutralMaxHours: number;
+  timestamp: string;
 }
 
+export interface TargetHistory {
+  targets: DailyTargets[];
+}
 // Add default targets
 export const DEFAULT_TARGETS: DailyTargets = {
-  productiveHours: 8,
+  productiveHours: 6,
   wastefulMaxHours: 2,
-  neutralMaxHours: 4
+  neutralMaxHours: 4,
+  timestamp: new Date().toISOString()
 };

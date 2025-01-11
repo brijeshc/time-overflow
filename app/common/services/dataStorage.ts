@@ -4,6 +4,7 @@ import * as Sharing from "expo-sharing";
 import {
   DailyTargets,
   DEFAULT_TARGETS,
+  TargetHistory,
   TimeLogEntry,
 } from "@/app/common/interfaces/timeLogging";
 
@@ -187,8 +188,7 @@ export const TimeLoggingStorage = {
   async calculateProductivityScore(): Promise<number> {
     try {
       const logs = await this.getAllLogs();
-      const targets = await TargetsStorage.getTargets();
-
+      const targets = await TargetsStorage.getTargetsForDate(new Date().toISOString().split("T")[0]);
       const totalProductiveHours = logs.reduce(
         (sum, log) =>
           log.category === "productive"
@@ -238,20 +238,61 @@ export const TimeLoggingStorage = {
 export const TargetsStorage = {
   async saveTargets(targets: DailyTargets): Promise<void> {
     try {
-      await AsyncStorage.setItem(TARGETS_KEY, JSON.stringify(targets));
+      let history = await this.getTargetHistory();
+      // Initialize if undefined
+      if (!history || !history.targets) {
+        history = { targets: [] };
+      }
+      history.targets.push(targets);
+      await AsyncStorage.setItem(TARGETS_KEY, JSON.stringify(history));
     } catch (error) {
       console.error("Error saving targets:", error);
       throw error;
     }
   },
 
-  async getTargets(): Promise<DailyTargets> {
+  async getTargetHistory(): Promise<TargetHistory> {
     try {
-      const targets = await AsyncStorage.getItem(TARGETS_KEY);
-      return targets ? JSON.parse(targets) : DEFAULT_TARGETS;
+      const historyString = await AsyncStorage.getItem(TARGETS_KEY);
+      if (!historyString) {
+        return { targets: [DEFAULT_TARGETS] };
+      }
+      const history = JSON.parse(historyString);
+      // Ensure valid structure
+      if (!history || !Array.isArray(history.targets)) {
+        return { targets: [DEFAULT_TARGETS] };
+      }
+      return history;
     } catch (error) {
-      console.error("Error retrieving targets:", error);
-      return DEFAULT_TARGETS;
+      console.error("Error getting target history:", error);
+      return { targets: [DEFAULT_TARGETS] };
     }
   },
+
+  async getTargetsForDate(date: string): Promise<DailyTargets> {
+    try {
+      const history = await this.getTargetHistory();
+      if (!history.targets || history.targets.length === 0) {
+        return DEFAULT_TARGETS;
+      }
+
+      const targetDate = new Date(date);
+      const today = new Date();
+      
+      if (targetDate > today) {
+        const mostRecentTargets = history.targets
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        return mostRecentTargets || DEFAULT_TARGETS;
+      }
+
+      const previousTargets = history.targets
+        .filter(t => new Date(t.timestamp) <= targetDate)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+      return previousTargets || DEFAULT_TARGETS;
+    } catch (error) {
+      console.error(`Error getting targets for date ${date}:`, error);
+      return DEFAULT_TARGETS;
+    }
+  }
 };
