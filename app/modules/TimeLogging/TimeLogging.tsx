@@ -6,11 +6,12 @@ import {
   Animated,
   PanResponder,
   Vibration,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { TimeLoggingStorage } from "../../common/services/dataStorage";
@@ -21,23 +22,30 @@ import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 type Category = "productive" | "neutral" | "wasteful";
 
 export default function TimeLogging({ onComplete }: TimeLoggingProps) {
-
   const { triggerRefresh } = useTimeLogging();
   const selectedBorder = useThemeColor({
-    light: "rgba(0, 0, 0, 1)",    // Subtle dark border for light mode
-    dark: "rgb(219, 246, 248)" // Subtle light border for dark mode
+    light: "rgba(0, 0, 0, 1)",
+    dark: "rgb(219, 246, 248)"
   }, "text");
 
   const [activity, setActivity] = useState("");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [category, setCategory] = useState<Category>("neutral");
+  const [fadeAnim] = useState(new Animated.Value(1));
+
+  const totalMinutes = useMemo(() => hours * 60 + minutes, [hours, minutes]);
 
   const inputBackground = useThemeColor({}, "background");
   const inputText = useThemeColor({}, "text");
 
+  const screenWidth = Dimensions.get('window').width;
+  const containerPadding = 40; // 20px padding on each side
+  const availableWidth = screenWidth - containerPadding;
+  const isSmallScreen = availableWidth < 300;
+
   const slideAnimation = new Animated.Value(0);
-  const buttonWidth = 250;
+  const buttonWidth = Math.min(250, screenWidth * 0.7);
   const threshold = buttonWidth * 0.4;
 
   const panResponder = PanResponder.create({
@@ -64,8 +72,16 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
     },
   });
 
+  const handleClose = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => onComplete());
+  };
+
   const handleLogActivity = async () => {
-    if (hours === 0 && minutes === 0) {
+    if (totalMinutes === 0) {
       onComplete();
       return;
     }
@@ -83,10 +99,9 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   
     try {
       await TimeLoggingStorage.saveLogs(newEntry);
-      triggerRefresh(); // Ensure this is called
+      triggerRefresh();
       onComplete();
     } catch (error) {
-      // Handle error appropriately
       console.error('Failed to save time log:', error);
     }
   };
@@ -116,7 +131,8 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
       <View style={styles.slideTrack}>
         <Animated.Text
           style={[
-            [styles.slideText, {color: selectedBorder}],
+            styles.slideText,
+            { color: selectedBorder },
             {
               opacity: slideAnimation.interpolate({
                 inputRange: [0, buttonWidth / 2],
@@ -144,31 +160,31 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Log Your Time</ThemedText>
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <ThemedView style={styles.container}>
+          <View style={styles.headerContainer}>
+            <ThemedText style={styles.title}>Log Your Time</ThemedText>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={handleClose}
+            >
+              <Ionicons name="close-circle-outline" size={28} color={'#007AFF'}/>
+            </TouchableOpacity>
+          </View>
 
       <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: inputBackground,
-            color: inputText,
-          },
-        ]}
+        style={[styles.input, { backgroundColor: inputBackground, color: inputText }]}
         placeholder="What did you do?"
         placeholderTextColor={inputText}
         value={activity}
         onChangeText={setActivity}
       />
 
-      <View style={styles.timeInputContainer}>
-        <View style={styles.timeField}>
+      <View style={[styles.timeInputContainer, isSmallScreen && styles.timeInputContainerSmall]}>
+        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
           <ThemedText style={styles.timeLabel}>Hours</ThemedText>
           <TextInput
-            style={[
-              styles.timeInput,
-              { backgroundColor: inputBackground, color: inputText },
-            ]}
+            style={[styles.timeInput, { backgroundColor: inputBackground, color: inputText }]}
             keyboardType="numeric"
             value={String(hours)}
             onChangeText={handleHoursInput}
@@ -178,13 +194,10 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
           />
         </View>
 
-        <View style={styles.timeField}>
+        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
           <ThemedText style={styles.timeLabel}>Minutes</ThemedText>
           <TextInput
-            style={[
-              styles.timeInput,
-              { backgroundColor: inputBackground, color: inputText },
-            ]}
+            style={[styles.timeInput, { backgroundColor: inputBackground, color: inputText }]}
             keyboardType="numeric"
             value={String(minutes)}
             onChangeText={handleMinutesInput}
@@ -194,31 +207,46 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
           />
         </View>
 
-        <View style={styles.timeField}>
-          <ThemedText style={styles.timeLabel}>Selected Time</ThemedText>
+        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
+          <ThemedText style={styles.timeLabel}>Total Time</ThemedText>
           <LinearGradient
             colors={["rgba(233, 222, 222, 0.24)", "rgba(14, 14, 14, 0.2)"]}
             style={styles.inlineTimeDisplay}
           >
             <ThemedText style={styles.inlineTimeText}>
-              {`${hours}h ${minutes}m`}
+              {`${totalMinutes}m`}
             </ThemedText>
           </LinearGradient>
         </View>
       </View>
 
-      <View style={styles.categoryContainer}>
+      <View style={[
+        styles.categoryContainer, 
+        isSmallScreen && styles.categoryContainerSmall
+      ]}>
         {Object.entries(categoryColors).map(([cat, color]) => (
           <TouchableOpacity
             key={cat}
             style={[
               styles.categoryButton,
               { backgroundColor: color },
-              category === cat && [styles.selectedCategory, { borderColor: selectedBorder }],
+              isSmallScreen && styles.categoryButtonSmall,
+              category === cat && [
+                styles.selectedCategory, 
+                { borderColor: selectedBorder }
+              ],
             ]}
             onPress={() => setCategory(cat as Category)}
           >
-            <ThemedText style={styles.categoryText}>
+            <ThemedText 
+              style={[
+                styles.categoryText,
+                isSmallScreen && styles.categoryTextSmall,
+                category === cat && styles.selectedCategoryText
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </ThemedText>
           </TouchableOpacity>
@@ -226,6 +254,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
       </View>
       {renderSlideToLog()}
     </ThemedView>
+    </Animated.View>
   );
 }
 
@@ -256,31 +285,61 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignSelf: "center",
     marginBottom: 20,
+    width: '100%',
+  },
+  categoryContainerSmall: {
+    flexDirection: 'column',
+    gap: 8,
+    marginHorizontal: 0,
   },
   categoryButton: {
-    padding: 10,
-    borderRadius: 30,
     flex: 1,
-    marginHorizontal: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 30,
+    marginHorizontal: 4,
     alignItems: "center",
+    justifyContent: "center",
+    minWidth: 80,
+  },
+  categoryButtonSmall: {
+    marginHorizontal: 0,
+    paddingVertical: 8,
+    width: '100%',
+    minHeight: 40,
   },
   selectedCategory: {
-    borderWidth: 3
+    borderWidth: 2,
   },
   categoryText: {
     color: "#fff",
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
+    textAlign: 'center',
+  },
+  categoryTextSmall: {
+    fontSize: 13,
+  },
+  selectedCategoryText: {
+    fontWeight: '600',
   },
   timeInputContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
   },
+  timeInputContainerSmall: {
+    flexDirection: "column",
+    gap: 10,
+  },
   timeField: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  timeFieldSmall: {
+    marginHorizontal: 0,
   },
   timeInput: {
     height: 45,
@@ -329,7 +388,6 @@ const styles = StyleSheet.create({
   slideText: {
     fontSize: 16,
     fontFamily: "Ubuntu_400Regular",
-    // color: "#007AFF",
   },
   slideButton: {
     width: 50,
@@ -346,5 +404,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  closeButton: {
+    padding: 5,
   },
 });

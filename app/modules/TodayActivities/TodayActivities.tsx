@@ -9,6 +9,10 @@ const calculateTotalMinutes = (hours: number, minutes: number) => {
   return hours * 60 + minutes;
 };
 
+const formatDuration = (hours: number, minutes: number) => {
+  return `${hours * 60 + minutes} m`;
+};
+
 export const TodayActivities = () => {
   const [todayActivities, setTodayActivities] = useState<TimeLogEntry[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
@@ -148,7 +152,7 @@ export const TodayActivities = () => {
                 </View>
               </View>
               <ThemedText style={styles.activityTime}>
-                {`${activity.hours}h ${activity.minutes}m`}
+                {formatDuration(activity.hours, activity.minutes)}
               </ThemedText>
             </View>
           </View>
@@ -258,9 +262,11 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   activityTime: {
-    fontSize: 14,
-    fontFamily: "Poppins_500Medium",
-    opacity: 0.8,
+    fontSize: 16,
+    fontFamily: "Poppins_600SemiBold",
+    opacity: 0.9,
+    minWidth: 70,
+    textAlign: 'right',
   },
 });
 

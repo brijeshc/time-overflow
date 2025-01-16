@@ -177,6 +177,19 @@ export const TargetAchievements = () => {
     }
   };
 
+  // Add utility function for calculating totals
+  const calculateDayTotals = (logs: TimeLogEntry[]) => {
+    return logs.reduce((acc, log) => {
+      const hours = log.hours + log.minutes / 60;
+      acc[log.category] += hours;
+      return acc;
+    }, {
+      productive: 0,
+      neutral: 0,
+      wasteful: 0
+    });
+  };
+
   return (
     <View style={styles.container}>
       <ThemedText style={styles.title}>Activity Calendar</ThemedText>
@@ -236,10 +249,14 @@ export const TargetAchievements = () => {
           <ScrollView style={styles.logsScrollView}>
             {dayLogs.map((log) => (
               <View key={log.id} style={styles.logItem}>
-                <ThemedText>{log.activity}</ThemedText>
-                <ThemedText>
-                  {log.hours}h {log.minutes}m
-                </ThemedText>
+                <View style={styles.logItemContent}>
+                  <ThemedText style={styles.activityText} numberOfLines={2}>
+                    {log.activity}
+                  </ThemedText>
+                  <ThemedText style={styles.durationText}>
+                    {log.hours}h {log.minutes}m
+                  </ThemedText>
+                </View>
                 <View
                   style={[
                     styles.categoryIndicator,
@@ -249,6 +266,24 @@ export const TargetAchievements = () => {
               </View>
             ))}
           </ScrollView>
+
+          {dayLogs.length > 0 && (
+            <View style={styles.daySummary}>
+              {Object.entries(calculateDayTotals(dayLogs)).map(([category, hours]) => (
+                <View key={category} style={styles.summaryItem}>
+                  <View 
+                    style={[
+                      styles.summaryDot, 
+                      { backgroundColor: getCategoryColor(category) }
+                    ]} 
+                  />
+                  <ThemedText style={styles.summaryText}>
+                    {`${Math.round(hours * 10) / 10}h`}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         <Dialog.Actions>
           {isHoliday(selectedDate!) ? (
@@ -396,6 +431,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: "rgba(150, 150, 150, 0.2)",
   },
+  logItemContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  activityText: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+  },
+  durationText: {
+    fontSize: 12,
+    fontFamily: "Poppins_400Regular",
+    color: "rgba(150, 150, 150, 0.8)",
+  },
   categoryIndicator: {
     width: 12,
     height: 12,
@@ -417,6 +465,30 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
+  daySummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 8,
+    gap: 8,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  summaryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  summaryText: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+  }
 });
 
 export default TargetAchievements;

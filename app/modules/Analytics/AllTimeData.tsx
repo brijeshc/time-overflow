@@ -9,7 +9,6 @@ import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 export const AllTimeData = () => {
   const backgroundColor = useThemeColor({}, "background");
   const { refreshTrigger } = useTimeLogging();
-  const textColor = useThemeColor({}, "text");
 
   interface TopActivity {
     activity: string;
@@ -62,15 +61,20 @@ export const AllTimeData = () => {
           productiveHours: number;
           neutralHours: number;
           wastefulHours: number;
-          activities: { [key: string]: number };
+          activities: { [category: string]: { [activity: string]: number } };
         },
         log: TimeLogEntry
       ) => {
         const minutes = log.hours * 60 + log.minutes;
         acc.totalHours += minutes;
         acc[`${log.category}Hours`] += minutes;
-        acc.activities[log.activity] =
-          (acc.activities[log.activity] || 0) + minutes;
+
+        if (!acc.activities[log.category]) {
+          acc.activities[log.category] = {};
+        }
+        acc.activities[log.category][log.activity] =
+          (acc.activities[log.category][log.activity] || 0) + minutes;
+
         return acc;
       },
       {
@@ -83,12 +87,7 @@ export const AllTimeData = () => {
     );
 
     const topActivities = (category: string): TopActivity[] =>
-      Object.entries(totals.activities)
-        .filter(([activity, minutes]) =>
-          allLogs.find(
-            (log) => log.activity === activity && log.category === category
-          )
-        )
+      Object.entries(totals.activities[category] || {})
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([activity, minutes]) => ({ activity, minutes }));
@@ -114,7 +113,9 @@ export const AllTimeData = () => {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <ThemedText style={styles.label}>Total Hours Logged:</ThemedText>
-          <ThemedText style={styles.value}>{formatHours(allTimeData.totalHours)}</ThemedText>
+          <ThemedText style={styles.value}>
+            {formatHours(allTimeData.totalHours)}
+          </ThemedText>
         </View>
         <View style={styles.statItem}>
           <ThemedText style={styles.label}>Since:</ThemedText>
@@ -122,37 +123,61 @@ export const AllTimeData = () => {
         </View>
         <View style={styles.statItem}>
           <ThemedText style={styles.label}>Total Productive Hours:</ThemedText>
-          <ThemedText style={styles.value}>{formatHours(allTimeData.productiveHours)}</ThemedText>
+          <ThemedText style={styles.value}>
+            {formatHours(allTimeData.productiveHours)}
+          </ThemedText>
         </View>
         <View style={styles.statItem}>
           <ThemedText style={styles.label}>Total Neutral Hours:</ThemedText>
-          <ThemedText style={styles.value}>{formatHours(allTimeData.neutralHours)}</ThemedText>
+          <ThemedText style={styles.value}>
+            {formatHours(allTimeData.neutralHours)}
+          </ThemedText>
         </View>
         <View style={styles.statItem}>
           <ThemedText style={styles.label}>Total Wasteful Hours:</ThemedText>
-          <ThemedText style={styles.value}>{formatHours(allTimeData.wastefulHours)}</ThemedText>
+          <ThemedText style={styles.value}>
+            {formatHours(allTimeData.wastefulHours)}
+          </ThemedText>
         </View>
       </View>
       <View style={styles.activitiesContainer}>
-        <ThemedText style={styles.subtitle}>Top 3 Productive Activities:</ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Top 3 Productive Activities:
+        </ThemedText>
         {allTimeData.topProductive.map((activity, index) => (
           <View key={index} style={styles.activityItem}>
-            <ThemedText style={styles.activityLabel}>{activity.activity}:</ThemedText>
-            <ThemedText style={styles.activityValue}>{formatHours(activity.minutes)}</ThemedText>
+            <ThemedText style={styles.activityLabel}>
+              {activity.activity}:
+            </ThemedText>
+            <ThemedText style={styles.activityValue}>
+              {formatHours(activity.minutes)}
+            </ThemedText>
           </View>
         ))}
-        <ThemedText style={styles.subtitle}>Top 3 Neutral Activities:</ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Top 3 Neutral Activities:
+        </ThemedText>
         {allTimeData.topNeutral.map((activity, index) => (
           <View key={index} style={styles.activityItem}>
-            <ThemedText style={styles.activityLabel}>{activity.activity}:</ThemedText>
-            <ThemedText style={styles.activityValue}>{formatHours(activity.minutes)}</ThemedText>
+            <ThemedText style={styles.activityLabel}>
+              {activity.activity}:
+            </ThemedText>
+            <ThemedText style={styles.activityValue}>
+              {formatHours(activity.minutes)}
+            </ThemedText>
           </View>
         ))}
-        <ThemedText style={styles.subtitle}>Top 3 Wasteful Activities:</ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Top 3 Wasteful Activities:
+        </ThemedText>
         {allTimeData.topWasteful.map((activity, index) => (
           <View key={index} style={styles.activityItem}>
-            <ThemedText style={styles.activityLabel}>{activity.activity}:</ThemedText>
-            <ThemedText style={styles.activityValue}>{formatHours(activity.minutes)}</ThemedText>
+            <ThemedText style={styles.activityLabel}>
+              {activity.activity}:
+            </ThemedText>
+            <ThemedText style={styles.activityValue}>
+              {formatHours(activity.minutes)}
+            </ThemedText>
           </View>
         ))}
       </View>
@@ -179,22 +204,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+    backgroundColor: "rgba(52, 152, 219, 0.1)",
   },
   label: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
-    color: '#3498db',
+    color: "#3498db",
   },
   value: {
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
-    color: '#3498db',
+    color: "#3498db",
   },
   activitiesContainer: {
     marginTop: 10,
@@ -205,22 +230,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   activityItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 5,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+    backgroundColor: "rgba(52, 152, 219, 0.1)",
   },
   activityLabel: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
-    color: '#3498db',
+    color: "#3498db",
   },
   activityValue: {
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
-    color: '#3498db',
+    color: "#3498db",
   },
 });
 
