@@ -179,15 +179,18 @@ export const TargetAchievements = () => {
 
   // Add utility function for calculating totals
   const calculateDayTotals = (logs: TimeLogEntry[]) => {
-    return logs.reduce((acc, log) => {
-      const hours = log.hours + log.minutes / 60;
-      acc[log.category] += hours;
-      return acc;
-    }, {
-      productive: 0,
-      neutral: 0,
-      wasteful: 0
-    });
+    return logs.reduce(
+      (acc, log) => {
+        const hours = log.hours + log.minutes / 60;
+        acc[log.category] += hours;
+        return acc;
+      },
+      {
+        productive: 0,
+        neutral: 0,
+        wasteful: 0,
+      }
+    );
   };
 
   return (
@@ -267,21 +270,32 @@ export const TargetAchievements = () => {
             ))}
           </ScrollView>
 
-          {dayLogs.length > 0 && (
+          {dayLogs.length > 0 ? (
             <View style={styles.daySummary}>
-              {Object.entries(calculateDayTotals(dayLogs)).map(([category, hours]) => (
-                <View key={category} style={styles.summaryItem}>
-                  <View 
-                    style={[
-                      styles.summaryDot, 
-                      { backgroundColor: getCategoryColor(category) }
-                    ]} 
-                  />
-                  <ThemedText style={styles.summaryText}>
-                    {`${Math.round(hours * 10) / 10}h`}
-                  </ThemedText>
-                </View>
-              ))}
+              {Object.entries(calculateDayTotals(dayLogs)).map(
+                ([category, hours]) => (
+                  <View key={category} style={styles.summaryItem}>
+                    <View
+                      style={[
+                        styles.summaryDot,
+                        { backgroundColor: getCategoryColor(category) },
+                      ]}
+                    />
+                    <ThemedText style={styles.summaryText}>
+                      {`${Math.round(hours * 10) / 10}h`}
+                    </ThemedText>
+                  </View>
+                )
+              )}
+            </View>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <ThemedText style={styles.emptyStateText}>
+                No activities logged for this day
+              </ThemedText>
+              <ThemedText style={styles.emptyStateSubText}>
+                Log your activities to track your productivity journey!
+              </ThemedText>
             </View>
           )}
         </View>
@@ -406,10 +420,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   modalContent: {
-    width: "90%",
+    width: "98%",
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: 12,
-    padding: 20,
+    padding: 10,
     maxHeight: "80%",
   },
   logsScrollView: {
@@ -434,6 +448,26 @@ const styles = StyleSheet.create({
   logItemContent: {
     flex: 1,
     marginRight: 8,
+  },
+  emptyStateContainer: {
+    marginTop: -15,
+    marginBottom: 15,
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
+    textAlign: "center",
+    marginBottom: 8,
+    opacity: 0.8,
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    textAlign: "center",
+    opacity: 0.6,
   },
   activityText: {
     fontSize: 14,
@@ -466,9 +500,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   daySummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     marginTop: 16,
     padding: 12,
     backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -476,8 +510,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   summaryDot: {
@@ -488,7 +522,7 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
-  }
+  },
 });
 
 export default TargetAchievements;

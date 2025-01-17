@@ -14,19 +14,23 @@ import { ThemedView } from "@/components/ThemedView";
 import React, { useState, useMemo } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
+import { Audio } from "expo-av";
 import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
-import { nanoid } from 'nanoid/non-secure';
+import { nanoid } from "nanoid/non-secure";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
 type Category = "productive" | "neutral" | "wasteful";
 
 export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const { triggerRefresh } = useTimeLogging();
-  const selectedBorder = useThemeColor({
-    light: "rgba(0, 0, 0, 1)",
-    dark: "rgb(219, 246, 248)"
-  }, "text");
+  const selectedBorder = useThemeColor(
+    {
+      light: "rgba(0, 0, 0, 1)",
+      dark: "rgb(219, 246, 248)",
+    },
+    "text"
+  );
 
   const [activity, setActivity] = useState("");
   const [hours, setHours] = useState(0);
@@ -39,7 +43,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const inputBackground = useThemeColor({}, "background");
   const inputText = useThemeColor({}, "text");
 
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
   const containerPadding = 40; // 20px padding on each side
   const availableWidth = screenWidth - containerPadding;
   const isSmallScreen = availableWidth < 300;
@@ -47,6 +51,31 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const slideAnimation = new Animated.Value(0);
   const buttonWidth = Math.min(250, screenWidth * 0.7);
   const threshold = buttonWidth * 0.4;
+
+  const playSelectionSound = async () => {
+    let sound: Audio.Sound | null = null;
+    try {
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/selection.mp3")
+      );
+      sound = newSound;
+      await sound.setVolumeAsync(0.04); // Reduce volume
+      await sound.playAsync();
+      // Clean up after playing
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          await sound?.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  const handleCategorySelect = async (selectedCategory: Category) => {
+    setCategory(selectedCategory);
+    await playSelectionSound();
+  };
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -94,15 +123,15 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
       minutes,
       category,
       timestamp: new Date().toISOString(),
-      synced: false
+      synced: false,
     };
-  
+
     try {
       await TimeLoggingStorage.saveLogs(newEntry);
       triggerRefresh();
       onComplete();
     } catch (error) {
-      console.error('Failed to save time log:', error);
+      console.error("Failed to save time log:", error);
     }
   };
 
@@ -160,100 +189,119 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   );
 
   return (
-      <Animated.View style={{ opacity: fadeAnim }}>
-        <ThemedView style={styles.container}>
-          <View style={styles.headerContainer}>
-            <ThemedText style={styles.title}>Log Your Time</ThemedText>
-            <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={handleClose}
-            >
-              <Ionicons name="close-circle-outline" size={28} color={'#007AFF'}/>
-            </TouchableOpacity>
+    <Animated.View style={{ opacity: fadeAnim }}>
+      <ThemedView style={styles.container}>
+        <View style={styles.headerContainer}>
+          <ThemedText style={styles.title}>Log Your Time</ThemedText>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <Ionicons name="close-circle-outline" size={28} color={"#007AFF"} />
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: inputBackground, color: inputText },
+          ]}
+          placeholder="What did you do?"
+          placeholderTextColor={inputText}
+          value={activity}
+          onChangeText={setActivity}
+        />
+
+        <View
+          style={[
+            styles.timeInputContainer,
+            isSmallScreen && styles.timeInputContainerSmall,
+          ]}
+        >
+          <View
+            style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}
+          >
+            <ThemedText style={styles.timeLabel}>Hours</ThemedText>
+            <TextInput
+              style={[
+                styles.timeInput,
+                { backgroundColor: inputBackground, color: inputText },
+              ]}
+              keyboardType="numeric"
+              value={String(hours)}
+              onChangeText={handleHoursInput}
+              maxLength={2}
+              placeholder="0"
+              placeholderTextColor={inputText}
+            />
           </View>
 
-      <TextInput
-        style={[styles.input, { backgroundColor: inputBackground, color: inputText }]}
-        placeholder="What did you do?"
-        placeholderTextColor={inputText}
-        value={activity}
-        onChangeText={setActivity}
-      />
-
-      <View style={[styles.timeInputContainer, isSmallScreen && styles.timeInputContainerSmall]}>
-        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
-          <ThemedText style={styles.timeLabel}>Hours</ThemedText>
-          <TextInput
-            style={[styles.timeInput, { backgroundColor: inputBackground, color: inputText }]}
-            keyboardType="numeric"
-            value={String(hours)}
-            onChangeText={handleHoursInput}
-            maxLength={2}
-            placeholder="0"
-            placeholderTextColor={inputText}
-          />
-        </View>
-
-        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
-          <ThemedText style={styles.timeLabel}>Minutes</ThemedText>
-          <TextInput
-            style={[styles.timeInput, { backgroundColor: inputBackground, color: inputText }]}
-            keyboardType="numeric"
-            value={String(minutes)}
-            onChangeText={handleMinutesInput}
-            maxLength={3}
-            placeholder="0"
-            placeholderTextColor={inputText}
-          />
-        </View>
-
-        <View style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}>
-          <ThemedText style={styles.timeLabel}>Total Time</ThemedText>
-          <LinearGradient
-            colors={["rgba(233, 222, 222, 0.24)", "rgba(14, 14, 14, 0.2)"]}
-            style={styles.inlineTimeDisplay}
+          <View
+            style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}
           >
-            <ThemedText style={styles.inlineTimeText}>
-              {`${totalMinutes}m`}
-            </ThemedText>
-          </LinearGradient>
-        </View>
-      </View>
-
-      <View style={[
-        styles.categoryContainer, 
-        isSmallScreen && styles.categoryContainerSmall
-      ]}>
-        {Object.entries(categoryColors).map(([cat, color]) => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.categoryButton,
-              { backgroundColor: color },
-              isSmallScreen && styles.categoryButtonSmall,
-              category === cat && [
-                styles.selectedCategory, 
-                { borderColor: selectedBorder }
-              ],
-            ]}
-            onPress={() => setCategory(cat as Category)}
-          >
-            <ThemedText 
+            <ThemedText style={styles.timeLabel}>Minutes</ThemedText>
+            <TextInput
               style={[
-                styles.categoryText,
-                isSmallScreen && styles.categoryTextSmall,
-                category === cat && styles.selectedCategoryText
+                styles.timeInput,
+                { backgroundColor: inputBackground, color: inputText },
               ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+              keyboardType="numeric"
+              value={String(minutes)}
+              onChangeText={handleMinutesInput}
+              maxLength={3}
+              placeholder="0"
+              placeholderTextColor={inputText}
+            />
+          </View>
+
+          <View
+            style={[styles.timeField, isSmallScreen && styles.timeFieldSmall]}
+          >
+            <ThemedText style={styles.timeLabel}>Total Time</ThemedText>
+            <LinearGradient
+              colors={["rgba(233, 222, 222, 0.24)", "rgba(14, 14, 14, 0.2)"]}
+              style={styles.inlineTimeDisplay}
             >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
-      </View>
-      {renderSlideToLog()}
-    </ThemedView>
+              <ThemedText style={styles.inlineTimeText}>
+                {`${totalMinutes}m`}
+              </ThemedText>
+            </LinearGradient>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.categoryContainer,
+            isSmallScreen && styles.categoryContainerSmall,
+          ]}
+        >
+          {Object.entries(categoryColors).map(([cat, color]) => (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.categoryButton,
+                { backgroundColor: color },
+                isSmallScreen && styles.categoryButtonSmall,
+                category === cat && [
+                  styles.selectedCategory,
+                  { borderColor: selectedBorder },
+                ],
+              ]}
+              onPress={() => handleCategorySelect(cat as Category)}
+            >
+              <ThemedText
+                style={[
+                  styles.categoryText,
+                  isSmallScreen && styles.categoryTextSmall,
+                  category === cat && styles.selectedCategoryText,
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {renderSlideToLog()}
+      </ThemedView>
     </Animated.View>
   );
 }
@@ -287,10 +335,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignSelf: "center",
     marginBottom: 20,
-    width: '100%',
+    width: "100%",
   },
   categoryContainerSmall: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 8,
     marginHorizontal: 0,
   },
@@ -307,7 +355,7 @@ const styles = StyleSheet.create({
   categoryButtonSmall: {
     marginHorizontal: 0,
     paddingVertical: 8,
-    width: '100%',
+    width: "100%",
     minHeight: 40,
   },
   selectedCategory: {
@@ -317,13 +365,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
-    textAlign: 'center',
+    textAlign: "center",
   },
   categoryTextSmall: {
     fontSize: 13,
   },
   selectedCategoryText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   timeInputContainer: {
     flexDirection: "row",
@@ -370,7 +418,7 @@ const styles = StyleSheet.create({
     height: 60,
     width: 230,
     backgroundColor: "rgba(248, 246, 246, 0.1)",
-    borderColor: '#3498db',
+    borderColor: "#3498db",
     borderWidth: 1,
     borderRadius: 30,
     overflow: "hidden",
@@ -406,9 +454,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
   },
   closeButton: {

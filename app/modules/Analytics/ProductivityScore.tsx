@@ -1,24 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { TimeLoggingStorage } from '../../common/services/dataStorage';
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
-import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const ProductivityScore = () => {
   const [score, setScore] = useState<number | null>(null);
+  const [totalDays, setTotalDays] = useState<number | null>(null);
   const { refreshTrigger } = useTimeLogging();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
+  const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
 
   useEffect(() => {
     const fetchScore = async () => {
       try {
-        const calculatedScore = await TimeLoggingStorage.calculateProductivityScore();
-        setScore(calculatedScore);
+        const ProdctivityScore =
+          await TimeLoggingStorage.calculateProductivityScore();
+        setScore(ProdctivityScore?.score || null);
+        setTotalDays(ProdctivityScore?.totalDays || null);
       } catch (error) {
-        console.error('Error fetching productivity score:', error);
+        console.error("Error fetching productivity score:", error);
       }
     };
 
@@ -48,7 +51,9 @@ export const ProductivityScore = () => {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      <ThemedText style={[styles.title, { color: textColor }]}>Productivity Score</ThemedText>
+      <ThemedText style={[styles.title, { color: textColor }]}>
+        Productivity Score
+      </ThemedText>
       {score !== null ? (
         <>
           <Ionicons
@@ -57,11 +62,23 @@ export const ProductivityScore = () => {
             color={getIconColor(score)}
             style={styles.icon}
           />
-          <ThemedText style={[styles.score, { color: textColor }]}>{score.toFixed(2)}%</ThemedText>
-          <ThemedText style={[styles.message, { color: textColor }]}>{getMotivationalMessage(score)}</ThemedText>
+          <View style={styles.scoreContainer}>
+            <ThemedText style={[styles.score, { color: textColor }]}>
+              {score.toFixed(2)}%
+            </ThemedText>
+            <ThemedText style={[styles.totalDays, { color: textColor }]}>
+              over {totalDays} {totalDays === 1 ? "day" : "days"}
+            </ThemedText>
+          </View>
+          <ThemedText style={[styles.message, { color: textColor }]}>
+            {getMotivationalMessage(score)}
+          </ThemedText>
         </>
       ) : (
-        <ThemedText style={[styles.loading, { color: textColor }]}>Loading...</ThemedText>
+        <ThemedText style={[styles.loading, { color: textColor }]}>
+          Log your activities. Your overall productiviy score will be calculated
+          based on your daily targets.
+        </ThemedText>
       )}
     </View>
   );
@@ -71,9 +88,9 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     marginBottom: 16,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -81,7 +98,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
+    fontFamily: "Poppins_500Medium",
     marginBottom: 8,
   },
   icon: {
@@ -89,17 +106,26 @@ const styles = StyleSheet.create({
   },
   score: {
     fontSize: 24,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: "Poppins_700Bold",
   },
   message: {
     fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: "Poppins_400Regular",
     marginTop: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loading: {
     fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: "Poppins_400Regular",
     marginTop: 8,
+  },
+  scoreContainer: {
+    alignItems: "center",
+    gap: 4,
+  },
+  totalDays: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    opacity: 0.8,
   },
 });

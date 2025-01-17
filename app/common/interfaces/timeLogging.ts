@@ -26,6 +26,11 @@ export interface DailyTargets {
 export interface TargetHistory {
   targets: DailyTargets[];
 }
+
+export interface ProductivityScore {
+  score: number;
+  totalDays: number;
+}
 // Add default targets
 export const DEFAULT_TARGETS: DailyTargets = {
   productiveHours: 6,

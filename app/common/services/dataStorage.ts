@@ -4,6 +4,7 @@ import * as Sharing from "expo-sharing";
 import {
   DailyTargets,
   DEFAULT_TARGETS,
+  ProductivityScore,
   TargetHistory,
   TimeLogEntry,
 } from "@/app/common/interfaces/timeLogging";
@@ -185,56 +186,89 @@ export const TimeLoggingStorage = {
     }
   },
 
-  async calculateProductivityScore(): Promise<number> {
+  async calculateProductivityScore(): Promise<ProductivityScore | null> {
     try {
       const logs = await this.getAllLogs();
-      const targets = await TargetsStorage.getTargetsForDate(new Date().toISOString().split("T")[0]);
-      const totalProductiveHours = logs.reduce(
-        (sum, log) =>
-          log.category === "productive"
-            ? sum + log.hours + log.minutes / 60
-            : sum,
-        0
-      );
-      const totalWastefulHours = logs.reduce(
-        (sum, log) =>
-          log.category === "wasteful"
-            ? sum + log.hours + log.minutes / 60
-            : sum,
-        0
-      );
-      const totalNeutralHours = logs.reduce(
-        (sum, log) =>
-          log.category === "neutral" ? sum + log.hours + log.minutes / 60 : sum,
-        0
+      if (logs.length === 0) return null;
+
+      // Group logs by date
+      const logsByDate = logs.reduce((acc, log) => {
+        const date = log.timestamp.split("T")[0];
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(log);
+        return acc;
+      }, {} as Record<string, TimeLogEntry[]>);
+
+      // Calculate score for each day
+      const dailyScores = await Promise.all(
+        Object.entries(logsByDate).map(async ([date, dayLogs]) => {
+          const targets = await TargetsStorage.getTargetsForDate(date);
+
+          const totals = dayLogs.reduce(
+            (sum, log) => {
+              const hours = log.hours + log.minutes / 60;
+              sum[log.category] += hours;
+              return sum;
+            },
+            { productive: 0, wasteful: 0, neutral: 0 }
+          );
+
+          // Productive score: 0-100 based on target achievement
+          const productiveScore = Math.min(
+            (totals.productive / targets.productiveHours) * 100,
+            100
+          );
+
+          // Wasteful penalty: 0-100 (less is better)
+          const wastefulPenalty = Math.min(
+            (totals.wasteful / targets.wastefulMaxHours) * 100,
+            100
+          );
+
+          // Neutral balance: 0-100
+          const neutralBalance = Math.min(
+            (totals.neutral / targets.neutralMaxHours) * 100,
+            100
+          );
+
+          // Calculate daily score with weighted components
+          const dailyScore =
+            productiveScore * 0.6 + // 60% weight to productive
+            (100 - wastefulPenalty) * 0.3 + // 30% weight to avoiding wasteful
+            neutralBalance * 0.1; // 10% weight to neutral balance
+
+          return {
+            date,
+            score: dailyScore,
+            hasActivity: true,
+          };
+        })
       );
 
-      const productiveScore = Math.min(
-        (totalProductiveHours / targets.productiveHours) * 100,
-        100
-      );
-      const wastefulScore = Math.min(
-        (totalWastefulHours / targets.wastefulMaxHours) * 100,
-        100
-      );
-      const neutralScore = Math.min(
-        (totalNeutralHours / targets.neutralMaxHours) * 100,
-        100
-      );
+      // Calculate overall score as weighted average
+      // Recent days have more weight
+      const totalDays = dailyScores.length;
+      const weightedScores = dailyScores
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map((day, index) => {
+          const weight = Math.pow(0.9, index); // Exponential decay of weights
+          return day.score * weight;
+        });
 
-      const overallScore =
-        productiveScore * 0.6 +
-        (100 - wastefulScore) * 0.3 +
-        neutralScore * 0.1;
+      const totalWeight = weightedScores.reduce(
+        (sum, _, i) => sum + Math.pow(0.9, i),
+        0
+      );
+      const finalScore =
+        weightedScores.reduce((sum, score) => sum + score, 0) / totalWeight;
 
-      return overallScore;
+      return { score: Math.round(finalScore * 100) / 100, totalDays }; // Round to 2 decimal places
     } catch (error) {
       console.error("Error calculating productivity score:", error);
-      throw error;
+      return null;
     }
   },
 };
-
 export const TargetsStorage = {
   async saveTargets(targets: DailyTargets): Promise<void> {
     try {
@@ -278,21 +312,26 @@ export const TargetsStorage = {
 
       const targetDate = new Date(date);
       const today = new Date();
-      
+
       if (targetDate > today) {
-        const mostRecentTargets = history.targets
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        const mostRecentTargets = history.targets.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0];
         return mostRecentTargets || DEFAULT_TARGETS;
       }
 
       const previousTargets = history.targets
-        .filter(t => new Date(t.timestamp) <= targetDate)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        .filter((t) => new Date(t.timestamp) <= targetDate)
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0];
 
       return previousTargets || DEFAULT_TARGETS;
     } catch (error) {
       console.error(`Error getting targets for date ${date}:`, error);
       return DEFAULT_TARGETS;
     }
-  }
+  },
 };
