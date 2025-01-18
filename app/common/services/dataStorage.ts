@@ -268,6 +268,16 @@ export const TimeLoggingStorage = {
       return null;
     }
   },
+  async clearAllLogs(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      await AsyncStorage.removeItem(HOLIDAYS_KEY);
+      await AsyncStorage.removeItem(SAVED_ACTIVITIES_KEY);
+    } catch (error) {
+      console.error("Error clearing logs:", error);
+      throw error;
+    }
+  },
 };
 export const TargetsStorage = {
   async saveTargets(targets: DailyTargets): Promise<void> {
@@ -332,6 +342,14 @@ export const TargetsStorage = {
     } catch (error) {
       console.error(`Error getting targets for date ${date}:`, error);
       return DEFAULT_TARGETS;
+    }
+  },
+  async clearTargets(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(TARGETS_KEY);
+    } catch (error) {
+      console.error("Error clearing targets:", error);
+      throw error;
     }
   },
 };

@@ -76,8 +76,9 @@ export const ProductivityScore = () => {
         </>
       ) : (
         <ThemedText style={[styles.loading, { color: textColor }]}>
-          Log your activities. Your overall productiviy score will be calculated
-          based on your daily targets.
+          Start tracking your daily activities to unlock your productivity
+          insights! Your personalized score will reflect how well you meet your
+          daily goals.
         </ThemedText>
       )}
     </View>
@@ -117,7 +118,11 @@ const styles = StyleSheet.create({
   loading: {
     fontSize: 16,
     fontFamily: "Poppins_400Regular",
-    marginTop: 8,
+    marginTop: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: 8,
+    opacity: 0.9,
   },
   scoreContainer: {
     alignItems: "center",

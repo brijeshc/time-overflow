@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { Audio } from "expo-av";
@@ -52,21 +52,35 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const buttonWidth = Math.min(250, screenWidth * 0.7);
   const threshold = buttonWidth * 0.4;
 
-  const playSelectionSound = async () => {
-    let sound: Audio.Sound | null = null;
-    try {
-      const { sound: newSound } = await Audio.Sound.createAsync(
+  const [selectionSound, setSelectionSound] = useState<Audio.Sound | null>(
+    null
+  );
+
+  //useEffect to load the sound once when component mounts
+  useEffect(() => {
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
         require("@/assets/sounds/selection.mp3")
       );
-      sound = newSound;
-      await sound.setVolumeAsync(0.04); // Reduce volume
-      await sound.playAsync();
-      // Clean up after playing
-      sound.setOnPlaybackStatusUpdate(async (status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          await sound?.unloadAsync();
-        }
-      });
+      await sound.setVolumeAsync(0.06);
+      setSelectionSound(sound);
+    };
+
+    loadSound();
+
+    // Cleanup when component unmounts
+    return () => {
+      if (selectionSound) {
+        selectionSound.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playSelectionSound = async () => {
+    try {
+      if (selectionSound) {
+        await selectionSound.replayAsync();
+      }
     } catch (error) {
       console.error("Error playing sound:", error);
     }

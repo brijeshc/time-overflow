@@ -29,11 +29,11 @@ import {
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 import {
   cancelDailyNotification,
-  checkAndScheduleNotification,
   scheduleDailyNotification,
 } from "../../common/services/notificationService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
+import Constants from "expo-constants";
 
 const { width } = Dimensions.get("window");
 
@@ -138,6 +138,34 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
       );
     }
     setIsNotificationEnabled(!isNotificationEnabled);
+  };
+
+  const handleDeleteAllData = async () => {
+    Alert.alert(
+      "Delete All Data",
+      "Are you sure you want to delete all your data? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await TimeLoggingStorage.clearAllLogs();
+              await TargetsStorage.clearTargets();
+              await AsyncStorage.clear();
+              triggerRefresh();
+              Alert.alert("Success", "All data has been deleted successfully");
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete data");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleTimeChange = async (
@@ -296,6 +324,35 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
               }${notificationTime.getMinutes()}`}
             </ThemedText>
           </TouchableOpacity>
+        </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
+          </View>
+          <TouchableOpacity
+            onPress={handleDeleteAllData}
+            style={[styles.button, styles.deleteButton]}
+          >
+            <ThemedText style={[styles.buttonText]}>Delete All Data</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(
+                "https://infinitycoder.hashnode.dev/time-overflow-privacy-policy"
+              )
+            }
+            style={styles.privacyLink}
+          >
+            <ThemedText style={styles.linkText}>Privacy Policy</ThemedText>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.versionContainer}>
+          <ThemedText style={styles.versionText}>
+            Version {Constants.expoConfig?.version || "1.0.0"}
+          </ThemedText>
         </View>
       </ThemedView>
 
@@ -472,6 +529,30 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontFamily: "Poppins_500Medium",
+  },
+  deleteButton: {
+    borderColor: "#ff3b30",
+  },
+  privacyLink: {
+    padding: 10,
+  },
+  linkText: {
+    color: "#007AFF",
+    textDecorationLine: "underline",
+    fontSize: 16,
+    fontFamily: "Ubuntu_400Regular",
+  },
+  versionContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  versionText: {
+    fontSize: 14,
+    fontFamily: "Ubuntu_400Regular",
+    color: "#888",
   },
 });
 
