@@ -87,8 +87,8 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   };
 
   const handleCategorySelect = async (selectedCategory: Category) => {
-    setCategory(selectedCategory);
     await playSelectionSound();
+    setCategory(selectedCategory);
   };
 
   const panResponder = PanResponder.create({

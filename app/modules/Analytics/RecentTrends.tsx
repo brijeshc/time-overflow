@@ -81,6 +81,12 @@ export const RecentTrends = () => {
     const firstHalf = data.slice(0, 3);
     const secondHalf = data.slice(3);
 
+    // Check if we have any data in both halves
+    const hasFirstHalfData = firstHalf.some((day) => day.totalHours > 0);
+    const hasSecondHalfData = secondHalf.some((day) => day.totalHours > 0);
+
+    if (!hasFirstHalfData || !hasSecondHalfData) return 0;
+
     const firstHalfAvg =
       firstHalf.reduce((sum, day) => sum + day.productivityScore, 0) /
       firstHalf.length;
@@ -88,7 +94,13 @@ export const RecentTrends = () => {
       secondHalf.reduce((sum, day) => sum + day.productivityScore, 0) /
       secondHalf.length;
 
-    return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
+    // Prevent division by zero and handle very small numbers
+    if (firstHalfAvg === 0 || !isFinite(firstHalfAvg)) return 0;
+
+    const rate = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
+
+    // Handle any remaining edge cases
+    return isFinite(rate) ? rate : 0;
   };
 
   return (

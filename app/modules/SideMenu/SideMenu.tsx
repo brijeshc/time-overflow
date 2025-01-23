@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
   Modal,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Animated, {
@@ -198,162 +199,167 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <ThemedView style={styles.menu}>
-        <View style={styles.header}>
-          <ThemedText style={styles.title}>Preferences</ThemedText>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={28} color={textColor} />
-          </TouchableOpacity>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <ThemedText style={styles.title}>Preferences</ThemedText>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={28} color={textColor} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setIsEditingTargets(!isEditingTargets)}
-          >
-            <ThemedText style={styles.sectionTitle}>Daily Targets</ThemedText>
-            <Ionicons
-              name={isEditingTargets ? "chevron-up" : "chevron-down"}
-              size={24}
-              color={textColor}
-            />
-          </TouchableOpacity>
-
-          {isEditingTargets && (
-            <View style={styles.targetInputs}>
-              <ThemedText style={styles.inputLabel}>
-                Daily Productive Time Target (hours)
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  { backgroundColor: inputBackgroundColor, color: textColor },
-                ]}
-                keyboardType="numeric"
-                value={String(targets.productiveHours)}
-                onChangeText={(value) =>
-                  handleInputChange("productiveHours", value)
-                }
-                placeholder="0"
-                placeholderTextColor={textColor}
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => setIsEditingTargets(!isEditingTargets)}
+            >
+              <ThemedText style={styles.sectionTitle}>Daily Targets</ThemedText>
+              <Ionicons
+                name={isEditingTargets ? "chevron-up" : "chevron-down"}
+                size={24}
+                color={textColor}
               />
+            </TouchableOpacity>
 
-              <ThemedText style={styles.inputLabel}>
-                Daily Wasteful Time Limit (hours)
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  { backgroundColor: inputBackgroundColor, color: textColor },
-                ]}
-                keyboardType="numeric"
-                value={String(targets.wastefulMaxHours)}
-                onChangeText={(value) =>
-                  handleInputChange("wastefulMaxHours", value)
-                }
-                placeholder="0"
-              />
-
-              <ThemedText style={styles.inputLabel}>
-                Daily Neutral Time Limit (hours)
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  { backgroundColor: inputBackgroundColor, color: textColor },
-                ]}
-                keyboardType="numeric"
-                value={String(targets.neutralMaxHours)}
-                onChangeText={(value) =>
-                  handleInputChange("neutralMaxHours", value)
-                }
-                placeholder="0"
-              />
-
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSaveTargets}
-              >
-                <ThemedText style={styles.saveButtonText}>Save</ThemedText>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setIsBackupVisible(!isBackupVisible)}
-          >
-            <ThemedText style={styles.sectionTitle}>Backup Data</ThemedText>
-            <Ionicons
-              name={isBackupVisible ? "chevron-up" : "chevron-down"}
-              size={24}
-              color={textColor}
-            />
-          </TouchableOpacity>
-
-          {isBackupVisible && (
-            <View style={styles.backupContainer}>
-              <TouchableOpacity onPress={handleShare} style={styles.button}>
-                <ThemedText style={styles.buttonText}>
-                  Export Time Logs
+            {isEditingTargets && (
+              <View style={styles.targetInputs}>
+                <ThemedText style={styles.inputLabel}>
+                  Daily Productive Time Target (hours)
                 </ThemedText>
-              </TouchableOpacity>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { backgroundColor: inputBackgroundColor, color: textColor },
+                  ]}
+                  keyboardType="numeric"
+                  value={String(targets.productiveHours)}
+                  onChangeText={(value) =>
+                    handleInputChange("productiveHours", value)
+                  }
+                  placeholder="0"
+                  placeholderTextColor={textColor}
+                />
+
+                <ThemedText style={styles.inputLabel}>
+                  Daily Wasteful Time Limit (hours)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { backgroundColor: inputBackgroundColor, color: textColor },
+                  ]}
+                  keyboardType="numeric"
+                  value={String(targets.wastefulMaxHours)}
+                  onChangeText={(value) =>
+                    handleInputChange("wastefulMaxHours", value)
+                  }
+                  placeholder="0"
+                />
+
+                <ThemedText style={styles.inputLabel}>
+                  Daily Neutral Time Limit (hours)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { backgroundColor: inputBackgroundColor, color: textColor },
+                  ]}
+                  keyboardType="numeric"
+                  value={String(targets.neutralMaxHours)}
+                  onChangeText={(value) =>
+                    handleInputChange("neutralMaxHours", value)
+                  }
+                  placeholder="0"
+                />
+
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSaveTargets}
+                >
+                  <ThemedText style={styles.saveButtonText}>Save</ThemedText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => setIsBackupVisible(!isBackupVisible)}
+            >
+              <ThemedText style={styles.sectionTitle}>Backup Data</ThemedText>
+              <Ionicons
+                name={isBackupVisible ? "chevron-up" : "chevron-down"}
+                size={24}
+                color={textColor}
+              />
+            </TouchableOpacity>
+
+            {isBackupVisible && (
+              <View style={styles.backupContainer}>
+                <TouchableOpacity onPress={handleShare} style={styles.button}>
+                  <ThemedText style={styles.buttonText}>
+                    Export Time Logs
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <ThemedText style={styles.sectionTitle}>
+                Reminder Notification
+              </ThemedText>
+              <Switch
+                value={isNotificationEnabled}
+                onValueChange={handleNotificationToggle}
+              />
             </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>
-              Reminder Notification
+            <ThemedText style={styles.infoText}>
+              Enable this to receive daily reminders if you haven't logged
+              enough productive hours.
             </ThemedText>
-            <Switch
-              value={isNotificationEnabled}
-              onValueChange={handleNotificationToggle}
-            />
+            <TouchableOpacity onPress={() => setShowTimePicker(true)}>
+              <ThemedText style={styles.timePickerText}>
+                {`Notification Time: ${notificationTime.getHours()}:${
+                  notificationTime.getMinutes() < 10 ? "0" : ""
+                }${notificationTime.getMinutes()}`}
+              </ThemedText>
+            </TouchableOpacity>
           </View>
-          <ThemedText style={styles.infoText}>
-            Enable this to receive daily reminders if you haven't logged enough
-            productive hours.
-          </ThemedText>
-          <TouchableOpacity onPress={() => setShowTimePicker(true)}>
-            <ThemedText style={styles.timePickerText}>
-              {`Notification Time: ${notificationTime.getHours()}:${
-                notificationTime.getMinutes() < 10 ? "0" : ""
-              }${notificationTime.getMinutes()}`}
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
+            </View>
+            <TouchableOpacity
+              onPress={handleDeleteAllData}
+              style={[styles.button, styles.deleteButton]}
+            >
+              <ThemedText style={[styles.buttonText]}>
+                Delete All Data
+              </ThemedText>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={handleDeleteAllData}
-            style={[styles.button, styles.deleteButton]}
-          >
-            <ThemedText style={[styles.buttonText]}>Delete All Data</ThemedText>
-          </TouchableOpacity>
-        </View>
 
-        <View style={styles.section}>
-          <TouchableOpacity
-            onPress={() =>
-              Linking.openURL(
-                "https://infinitycoder.hashnode.dev/time-overflow-privacy-policy"
-              )
-            }
-            style={styles.privacyLink}
-          >
-            <ThemedText style={styles.linkText}>Privacy Policy</ThemedText>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.versionContainer}>
-          <ThemedText style={styles.versionText}>
-            Version {Constants.expoConfig?.version || "1.0.0"}
-          </ThemedText>
-        </View>
+          <View style={styles.section}>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(
+                  "https://infinitycoder.hashnode.dev/time-overflow-privacy-policy"
+                )
+              }
+              style={styles.privacyLink}
+            >
+              <ThemedText style={styles.linkText}>Privacy Policy</ThemedText>
+            </TouchableOpacity>
+          </View>
+          <View style={{ paddingBottom: 60 }} />
+          <View style={styles.versionContainer}>
+            <ThemedText style={styles.versionText}>
+              Version {Constants.expoConfig?.version || "1.0.0"}
+            </ThemedText>
+          </View>
+        </ScrollView>
       </ThemedView>
 
       {showTimePicker && (
