@@ -151,7 +151,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
 
   const handleHoursInput = (value: string) => {
     const numValue = parseInt(value) || 0;
-    setHours(Math.max(0, numValue));
+    setHours(Math.min(24, Math.max(0, numValue)));
   };
 
   const handleMinutesInput = (value: string) => {
@@ -221,6 +221,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
           placeholderTextColor={inputText}
           value={activity}
           onChangeText={setActivity}
+          maxLength={50}
         />
 
         <View

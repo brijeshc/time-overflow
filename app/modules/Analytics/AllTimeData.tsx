@@ -236,16 +236,20 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     backgroundColor: "rgba(52, 152, 219, 0.1)",
+    flexWrap: 'wrap'
   },
   activityLabel: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
     color: "#3498db",
+    flex: 1,
+    marginRight: 10,
   },
   activityValue: {
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
     color: "#3498db",
+    flexShrink: 0
   },
 });
 
