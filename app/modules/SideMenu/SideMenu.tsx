@@ -50,6 +50,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   const [isEditingTargets, setIsEditingTargets] = useState(false);
   const [isBackupVisible, setIsBackupVisible] = useState(false);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
+  const [isDangerZoneVisible, setIsDangerZoneVisible] = useState(false);
   const [notificationTime, setNotificationTime] = useState(
     new Date(0, 0, 0, 21, 0)
   );
@@ -75,7 +76,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
 
   const loadNotificationPreference = async () => {
     const notificationId = await AsyncStorage.getItem("@daily_notification");
-    setIsNotificationEnabled(!!notificationId);
+    setIsNotificationEnabled(notificationId !== null ? !!notificationId : true);
 
     const notificationTime = await AsyncStorage.getItem(
       "@daily_notification_time"
@@ -83,6 +84,9 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
     if (notificationTime) {
       const { hour, minute } = JSON.parse(notificationTime);
       setNotificationTime(new Date(0, 0, 0, hour, minute));
+    } else {
+      const defaultTime = new Date(0, 0, 0, 21, 0);
+      setNotificationTime(defaultTime);
     }
   };
 
@@ -328,24 +332,37 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
             </TouchableOpacity>
           </View>
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
-            </View>
             <TouchableOpacity
-              onPress={handleDeleteAllData}
-              style={[styles.button, styles.deleteButton]}
+              style={styles.sectionHeader}
+              onPress={() => setIsDangerZoneVisible(!isDangerZoneVisible)}
             >
-              <ThemedText style={[styles.buttonText]}>
-                Delete All Data
-              </ThemedText>
+              <ThemedText style={styles.sectionTitle}>Danger Zone</ThemedText>
+              <Ionicons
+                name={isDangerZoneVisible ? "chevron-up" : "chevron-down"}
+                size={24}
+                color={textColor}
+              />
             </TouchableOpacity>
+
+            {isDangerZoneVisible && (
+              <View>
+                <TouchableOpacity
+                  onPress={handleDeleteAllData}
+                  style={[styles.button, styles.deleteButton]}
+                >
+                  <ThemedText style={[styles.buttonText]}>
+                    Delete All Data
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
                 Linking.openURL(
-                  "https://infinitycoder.hashnode.dev/time-overflow-privacy-policy"
+                  "https://time-overflow.vercel.app/privacy"
                 )
               }
               style={styles.privacyLink}

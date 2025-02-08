@@ -24,6 +24,9 @@ import { EmptyStatePrompt } from "../modules/EmptyStatePrompt/EmptyStatePrompt";
 import React from "react";
 import { BackHandler } from "react-native";
 import { SideMenu } from "../modules/SideMenu/SideMenu";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import { scheduleDailyNotification } from "../common/services/notificationService";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -31,7 +34,7 @@ export default function HomeScreen() {
   const [showLogging, setShowLogging] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  
+
   useEffect(() => {
     const backAction = () => {
       if (showLogging) {
@@ -48,6 +51,23 @@ export default function HomeScreen() {
 
     return () => backHandler.remove();
   }, [showLogging]);
+
+  useEffect(() => {
+    const requestNotificationPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status === "granted") {
+        const hour = 21; // Default 9 PM
+        const minute = 0;
+        await scheduleDailyNotification(hour, minute);
+        await AsyncStorage.setItem(
+          "@daily_notification_time",
+          JSON.stringify({ hour, minute })
+        );
+      }
+    };
+
+    requestNotificationPermissions();
+  }, []);
 
   const handlePress = () => {
     Animated.sequence([

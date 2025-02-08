@@ -66,7 +66,9 @@ export default function Tutorial() {
         <ThemedText style={[styles.paragraph, { color: textColor }]}>
           We hope you find Time Overflow helpful in managing your time
           effectively. If you have any questions or feedback, feel free to
-          contact us at fromzerotoinfinity13@gmail.com. Happy time tracking!
+          contact us at fromzerotoinfinity13@gmail.com. Visit our website at
+          https://time-overflow.vercel.app/ for more information. Happy time
+          tracking!
         </ThemedText>
       </ScrollView>
     </ThemedView>
