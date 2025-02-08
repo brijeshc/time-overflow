@@ -33,8 +33,8 @@ export interface ProductivityScore {
 }
 // Add default targets
 export const DEFAULT_TARGETS: DailyTargets = {
-  productiveHours: 6,
-  wastefulMaxHours: 2,
-  neutralMaxHours: 4,
+  productiveHours: 4,
+  wastefulMaxHours: 1,
+  neutralMaxHours: 2,
   timestamp: new Date().toISOString()
 };

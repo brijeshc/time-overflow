@@ -76,7 +76,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
 
   const loadNotificationPreference = async () => {
     const notificationId = await AsyncStorage.getItem("@daily_notification");
-    setIsNotificationEnabled(notificationId !== null ? !!notificationId : true);
+    setIsNotificationEnabled(!!notificationId && notificationId !== "false");
 
     const notificationTime = await AsyncStorage.getItem(
       "@daily_notification_time"
@@ -361,11 +361,8 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
-                Linking.openURL(
-                  "https://time-overflow.vercel.app/privacy"
-                )
+                Linking.openURL("https://time-overflow.vercel.app/privacy")
               }
-              style={styles.privacyLink}
             >
               <ThemedText style={styles.linkText}>Privacy Policy</ThemedText>
             </TouchableOpacity>
@@ -555,9 +552,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     borderColor: "#ff3b30",
-  },
-  privacyLink: {
-    padding: 10,
   },
   linkText: {
     color: "#007AFF",

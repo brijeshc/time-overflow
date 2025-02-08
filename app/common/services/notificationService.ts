@@ -12,7 +12,10 @@ import {
 const NOTIFICATION_KEY = "@daily_notification";
 const NOTIFICATION_TIME_KEY = "@daily_notification_time";
 
-export const scheduleDailyNotification = async (hour: number, minute: number) => {
+export const scheduleDailyNotification = async (
+  hour: number,
+  minute: number
+) => {
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== "granted") {
     await Notifications.requestPermissionsAsync();
@@ -29,28 +32,31 @@ export const scheduleDailyNotification = async (hour: number, minute: number) =>
     trigger: {
       hour,
       minute,
-      type: Notifications.SchedulableTriggerInputTypes.DAILY
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
     },
   });
 
   await AsyncStorage.setItem(NOTIFICATION_KEY, notificationId);
-  await AsyncStorage.setItem(NOTIFICATION_TIME_KEY, JSON.stringify({ hour, minute }));
+  await AsyncStorage.setItem(
+    NOTIFICATION_TIME_KEY,
+    JSON.stringify({ hour, minute })
+  );
 };
 
 export const cancelDailyNotification = async () => {
   const notificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
   if (notificationId) {
     await Notifications.cancelScheduledNotificationAsync(notificationId);
-    await AsyncStorage.removeItem(NOTIFICATION_KEY);
+    await AsyncStorage.setItem(NOTIFICATION_KEY, "false");
     await AsyncStorage.removeItem(NOTIFICATION_TIME_KEY);
   }
 };
 
 export const checkAndScheduleNotification = async () => {
   const logs: TimeLogEntry[] = await TimeLoggingStorage.getAllLogs();
-  const targets: DailyTargets = await TargetsStorage.getTargets();
-
   const today = new Date().toISOString().split("T")[0];
+  const targets: DailyTargets = await TargetsStorage.getTargetsForDate(today);
+
   const todayLogs = logs.filter((log) => log.timestamp.split("T")[0] === today);
   const totalProductiveHours = todayLogs.reduce(
     (sum, log) =>
@@ -60,7 +66,9 @@ export const checkAndScheduleNotification = async () => {
 
   if (totalProductiveHours < targets.productiveHours) {
     const notificationTime = await AsyncStorage.getItem(NOTIFICATION_TIME_KEY);
-    const { hour, minute } = notificationTime ? JSON.parse(notificationTime) : { hour: 21, minute: 0 };
+    const { hour, minute } = notificationTime
+      ? JSON.parse(notificationTime)
+      : { hour: 21, minute: 0 };
     await scheduleDailyNotification(hour, minute);
   } else {
     await cancelDailyNotification();

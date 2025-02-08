@@ -39,30 +39,33 @@ export default function HomeScreen() {
     const backAction = () => {
       if (showLogging) {
         setShowLogging(false);
-        return true; // Prevents default back action
+        return true;
       }
-      return false; // Allows default back action (exit app)
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       backAction
     );
-
     return () => backHandler.remove();
   }, [showLogging]);
 
   useEffect(() => {
     const requestNotificationPermissions = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status === "granted") {
-        const hour = 21; // Default 9 PM
-        const minute = 0;
-        await scheduleDailyNotification(hour, minute);
-        await AsyncStorage.setItem(
-          "@daily_notification_time",
-          JSON.stringify({ hour, minute })
-        );
+      const notificationId = await AsyncStorage.getItem("@daily_notification");
+    
+      if (notificationId!= 'false' && (notificationId === null || notificationId)) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === "granted") {
+          const hour = 21;
+          const minute = 0;
+          await scheduleDailyNotification(hour, minute);
+          await AsyncStorage.setItem(
+            "@daily_notification_time",
+            JSON.stringify({ hour, minute })
+          );
+        }
       }
     };
 
