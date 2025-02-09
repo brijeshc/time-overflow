@@ -55,7 +55,7 @@ export default function HomeScreen() {
     const requestNotificationPermissions = async () => {
       const notificationId = await AsyncStorage.getItem("@daily_notification");
     
-      if (notificationId!= 'false' && (notificationId === null || notificationId)) {
+      if (notificationId === null) {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status === "granted") {
           const hour = 21;
