@@ -24,9 +24,6 @@ import { EmptyStatePrompt } from "../modules/EmptyStatePrompt/EmptyStatePrompt";
 import React from "react";
 import { BackHandler } from "react-native";
 import { SideMenu } from "../modules/SideMenu/SideMenu";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
-import { cancelDailyNotification, scheduleDailyNotification } from "../common/services/notificationService";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -50,30 +47,6 @@ export default function HomeScreen() {
     );
     return () => backHandler.remove();
   }, [showLogging]);
-
-  useEffect(() => {
-    const requestNotificationPermissions = async () => {
-      const notificationId = await AsyncStorage.getItem("@daily_notification");
-    
-      if (notificationId === null) {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status === "granted") {
-          const hour = 21;
-          const minute = 0;
-          await scheduleDailyNotification(hour, minute);
-          await AsyncStorage.setItem(
-            "@daily_notification_time",
-            JSON.stringify({ hour, minute })
-          );
-        }
-        else if (status === "denied") {
-          cancelDailyNotification();
-        }
-      }
-    };
-
-    requestNotificationPermissions();
-  }, []);
 
   const handlePress = () => {
     Animated.sequence([

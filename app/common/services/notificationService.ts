@@ -47,17 +47,16 @@ export const cancelDailyNotification = async () => {
   const notificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
   if (notificationId) {
     await Notifications.cancelScheduledNotificationAsync(notificationId);
-    await AsyncStorage.setItem(NOTIFICATION_KEY, "false");
+    await AsyncStorage.removeItem(NOTIFICATION_KEY);
     await AsyncStorage.removeItem(NOTIFICATION_TIME_KEY);
   }
 };
 
 export const checkAndScheduleNotification = async () => {
-  const logs: TimeLogEntry[] = await TimeLoggingStorage.getAllLogs();
   const today = new Date().toISOString().split("T")[0];
   const targets: DailyTargets = await TargetsStorage.getTargetsForDate(today);
 
-  const todayLogs = logs.filter((log) => log.timestamp.split("T")[0] === today);
+  const todayLogs = await TimeLoggingStorage.getTodayLogs();
   const totalProductiveHours = todayLogs.reduce(
     (sum, log) =>
       log.category === "productive" ? sum + log.hours + log.minutes / 60 : sum,

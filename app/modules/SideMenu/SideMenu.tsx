@@ -76,7 +76,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
 
   const loadNotificationPreference = async () => {
     const notificationId = await AsyncStorage.getItem("@daily_notification");
-    setIsNotificationEnabled(!!notificationId && notificationId !== "false");
+    setIsNotificationEnabled(notificationId !== null ? !!notificationId : true);
 
     const notificationTime = await AsyncStorage.getItem(
       "@daily_notification_time"
