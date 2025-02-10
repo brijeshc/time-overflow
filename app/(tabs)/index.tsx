@@ -26,7 +26,7 @@ import { BackHandler } from "react-native";
 import { SideMenu } from "../modules/SideMenu/SideMenu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import { scheduleDailyNotification } from "../common/services/notificationService";
+import { cancelDailyNotification, scheduleDailyNotification } from "../common/services/notificationService";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -65,6 +65,9 @@ export default function HomeScreen() {
             "@daily_notification_time",
             JSON.stringify({ hour, minute })
           );
+        }
+        else if (status === "denied") {
+          cancelDailyNotification();
         }
       }
     };
