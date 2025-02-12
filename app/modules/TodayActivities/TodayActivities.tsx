@@ -1,5 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Animated,
+} from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { TimeLoggingStorage } from "../../common/services/dataStorage";
 import { TimeLogEntry } from "@/app/common/interfaces/timeLogging";
@@ -16,9 +22,23 @@ const formatDuration = (hours: number, minutes: number) => {
 export const TodayActivities = () => {
   const [todayActivities, setTodayActivities] = useState<TimeLogEntry[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [showHint, setShowHint] = useState(true);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const { triggerRefresh } = useTimeLogging();
   useEffect(() => {
     loadTodayActivities();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start(() => setShowHint(false));
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const loadTodayActivities = async () => {
@@ -158,7 +178,7 @@ export const TodayActivities = () => {
           </View>
         </TouchableOpacity>
       ))}
-      {selectedActivities.length > 0 && (
+      {selectedActivities.length > 0 ? (
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={handleDeleteSelected}
@@ -167,6 +187,13 @@ export const TodayActivities = () => {
             Delete Selected ({selectedActivities.length})
           </ThemedText>
         </TouchableOpacity>
+      ) : null}
+      {showHint && (
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <ThemedText style={styles.hint}>
+            Long press any activity to enable multi-select and delete
+          </ThemedText>
+        </Animated.View>
       )}
     </View>
   );
@@ -181,6 +208,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontFamily: "Poppins_500Medium",
+    marginBottom: 10,
+  },
+  hint: {
+    fontSize: 12,
+    marginStart: 4,
+    fontFamily: "Poppins_200Medium",
     marginBottom: 10,
   },
   activityItem: {
@@ -266,7 +299,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_600SemiBold",
     opacity: 0.9,
     minWidth: 70,
-    textAlign: 'right',
+    textAlign: "right",
   },
 });
 

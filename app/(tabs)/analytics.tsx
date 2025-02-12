@@ -33,13 +33,11 @@ export default function AnalyticsScreen() {
       <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>Analytics</ThemedText>
         <View style={styles.cardsContainer}>
-          {/* <DailySummary /> */}
           <TimeDistribution />
           <RecentTrends />
           <TargetAchievements />
           <AllTimeData />
           <ProductivityScore />
-          {/* <SmartInsights /> */}
         </View>
       </ThemedView>
     </ScrollView>
