@@ -54,6 +54,9 @@ export const TodaySummary = () => {
     <View style={styles.container}>
       <ThemedText style={styles.title}>Today's Distribution</ThemedText>
       <View style={styles.summaryContainer}>
+        <ThemedText style={styles.totalTime}>
+          Total Time: {formatTime(getTotalMinutes())}
+        </ThemedText>
         <View style={styles.progressBarContainer}>
           <View
             style={[
@@ -116,6 +119,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontFamily: "Poppins_500Medium",
+    marginBottom: 10,
+  },
+  totalTime: {
+    fontSize: 15,
+    fontFamily: "Poppins_600SemiBold",
+    textAlign: "left",
     marginBottom: 10,
   },
   summaryContainer: {
