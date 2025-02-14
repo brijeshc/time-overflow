@@ -15,6 +15,11 @@ export default function Tutorial() {
           Welcome to Time Overflow
         </ThemedText>
         <ThemedText style={[styles.paragraph, { color: textColor }]}>
+          ⚠️ Important: Please do not clear app data or cache as this will
+          result in the loss of all your time logging data. Data sync and import
+          features will be available in future updates.
+        </ThemedText>
+        <ThemedText style={[styles.paragraph, { color: textColor }]}>
           Time Overflow is designed to help you track your time efficiently and
           improve your productivity. The core purpose of this app is to maintain
           honest time logging for yourself. It serves as a behavioral nudge to
@@ -82,6 +87,13 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingTop: 20,
     paddingHorizontal: 20,
+  },
+  warningText: {
+    fontSize: 16,
+    fontFamily: "Poppins_500Medium",
+    marginBottom: 20,
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
   contentContainer: {
     paddingBottom: 20,
