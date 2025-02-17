@@ -191,7 +191,8 @@ export const TimeLoggingStorage = {
       const logs = await this.getAllLogs();
       if (logs.length === 0) return null;
 
-      // Group logs by date
+      const holidays = await this.getHolidays();
+
       const logsByDate = logs.reduce((acc, log) => {
         const date = log.timestamp.split("T")[0];
         if (!acc[date]) acc[date] = [];
@@ -199,10 +200,10 @@ export const TimeLoggingStorage = {
         return acc;
       }, {} as Record<string, TimeLogEntry[]>);
 
-      // Calculate score for each day
       const dailyScores = await Promise.all(
         Object.entries(logsByDate).map(async ([date, dayLogs]) => {
           const targets = await TargetsStorage.getTargetsForDate(date);
+          const isHoliday = holidays.includes(date);
 
           const totals = dayLogs.reduce(
             (sum, log) => {
@@ -213,56 +214,69 @@ export const TimeLoggingStorage = {
             { productive: 0, wasteful: 0, neutral: 0 }
           );
 
-          // Productive score: 0-100 based on target achievement
+          if (isHoliday) {
+            // Only consider productive hours on holidays
+            const productiveScore =
+              (totals.productive / targets.productiveHours) * 100;
+            return {
+              date,
+              score: productiveScore, // Direct productive hour contribution
+              hasActivity: totals.productive > 0,
+              countTowardsTotalDays: false,
+            };
+          }
+
           const productiveScore = Math.min(
             (totals.productive / targets.productiveHours) * 100,
             100
           );
-
-          // Wasteful penalty: 0-100 (less is better)
           const wastefulPenalty = Math.min(
             (totals.wasteful / targets.wastefulMaxHours) * 100,
             100
           );
-
-          // Neutral balance: 0-100
           const neutralBalance = Math.min(
             (totals.neutral / targets.neutralMaxHours) * 100,
             100
           );
 
-          // Calculate daily score with weighted components
           const dailyScore =
-            productiveScore * 0.6 + // 60% weight to productive
-            (100 - wastefulPenalty) * 0.3 + // 30% weight to avoiding wasteful
-            neutralBalance * 0.1; // 10% weight to neutral balance
+            productiveScore * 0.6 +
+            (100 - wastefulPenalty) * 0.3 +
+            neutralBalance * 0.1;
 
           return {
             date,
             score: dailyScore,
             hasActivity: true,
+            countTowardsTotalDays: true,
           };
         })
       );
 
-      // Calculate overall score as weighted average
-      // Recent days have more weight
-      const totalDays = dailyScores.length;
-      const weightedScores = dailyScores
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .map((day, index) => {
-          const weight = Math.pow(0.9, index); // Exponential decay of weights
-          return day.score * weight;
-        });
+      const sortedScores = dailyScores.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
 
-      const totalWeight = weightedScores.reduce(
+      const weightedScores = sortedScores.map((day, index) => {
+        const weight = Math.pow(0.9, index);
+        return day.score * weight;
+      });
+
+      const totalWeight = sortedScores.reduce(
         (sum, _, i) => sum + Math.pow(0.9, i),
         0
       );
+
       const finalScore =
         weightedScores.reduce((sum, score) => sum + score, 0) / totalWeight;
+      const totalDays = sortedScores.filter(
+        (day) => day.countTowardsTotalDays
+      ).length;
 
-      return { score: Math.round(finalScore * 100) / 100, totalDays }; // Round to 2 decimal places
+      return {
+        score: Math.round(finalScore * 100) / 100,
+        totalDays,
+      };
     } catch (error) {
       console.error("Error calculating productivity score:", error);
       return null;

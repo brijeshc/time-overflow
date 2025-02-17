@@ -35,7 +35,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const [activity, setActivity] = useState("");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
-  const [category, setCategory] = useState<Category>("neutral");
+  const [category, setCategory] = useState<Category>("productive");
   const [fadeAnim] = useState(new Animated.Value(1));
 
   const totalMinutes = useMemo(() => hours * 60 + minutes, [hours, minutes]);
@@ -44,7 +44,7 @@ export default function TimeLogging({ onComplete }: TimeLoggingProps) {
   const inputText = useThemeColor({}, "text");
 
   const screenWidth = Dimensions.get("window").width;
-  const containerPadding = 40; // 20px padding on each side
+  const containerPadding = 40;
   const availableWidth = screenWidth - containerPadding;
   const isSmallScreen = availableWidth < 300;
 

@@ -24,6 +24,7 @@ interface MarkedDates {
 }
 
 export const TargetAchievements = () => {
+  const { triggerRefresh } = useTimeLogging();
   const [markedDates, setMarkedDates] = useState<MarkedDates>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dayLogs, setDayLogs] = useState<TimeLogEntry[]>([]);
@@ -131,34 +132,39 @@ export const TargetAchievements = () => {
   };
 
   const markAsHoliday = async (date: string) => {
-    await TimeLoggingStorage.saveHoliday(date);
+    try {
+        await TimeLoggingStorage.saveHoliday(date);
+        setMarkedDates((prev) => ({
+            ...prev,
+            [date]: {
+                selected: true,
+                selectedColor: "#3498db",
+                marked: true,
+                dotColor: "#ffffff",
+            },
+        }));
+        setShowLogsModal(false);
+        triggerRefresh(); // Moved after all async operations
+    } catch (error) {
+        console.error("Error marking holiday:", error);
+    }
+};
 
-    // Immediately update local state
-    setMarkedDates((prev) => ({
-      ...prev,
-      [date]: {
-        selected: true,
-        selectedColor: "#3498db",
-        marked: true,
-        dotColor: "#ffffff",
-      },
-    }));
+const unmarkHoliday = async (date: string) => {
+    try {
+        await TimeLoggingStorage.unmarkHoliday(date);
+        setMarkedDates((prev) => {
+            const newMarkedDates = { ...prev };
+            delete newMarkedDates[date];
+            return newMarkedDates;
+        });
+        setShowLogsModal(false);
+        triggerRefresh(); // Moved after all async operations
+    } catch (error) {
+        console.error("Error unmarking holiday:", error);
+    }
+};
 
-    setShowLogsModal(false);
-  };
-
-  const unmarkHoliday = async (date: string) => {
-    await TimeLoggingStorage.unmarkHoliday(date);
-
-    // Immediately update local state
-    setMarkedDates((prev) => {
-      const newMarkedDates = { ...prev };
-      delete newMarkedDates[date];
-      return newMarkedDates;
-    });
-
-    setShowLogsModal(false);
-  };
 
   const isHoliday = (date: string) => {
     return markedDates[date]?.marked;

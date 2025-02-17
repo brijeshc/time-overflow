@@ -12,9 +12,11 @@ const opacityAnim = new Animated.Value(0);
 export const EmptyStatePrompt = () => {
   const [hasActivities, setHasActivities] = useState(true);
   const { refreshTrigger } = useTimeLogging();
-  const iconColor = useThemeColor({}, 'text');
+  const [isHoliday, setIsHoliday] = useState(false);
+  const iconColor = useThemeColor({}, "text");
   useEffect(() => {
     checkTodayActivities();
+    checkIfHoliday();
   }, [refreshTrigger]);
 
   useEffect(() => {
@@ -46,6 +48,12 @@ export const EmptyStatePrompt = () => {
     }).start();
   };
 
+  const checkIfHoliday = async () => {
+    const holidays = await TimeLoggingStorage.getHolidays();
+    const today = new Date().toISOString().split("T")[0];
+    setIsHoliday(holidays.includes(today));
+  };
+
   const checkTodayActivities = async () => {
     const allLogs = await TimeLoggingStorage.getAllLogs();
     const today = new Date().toISOString().split("T")[0];
@@ -70,18 +78,46 @@ export const EmptyStatePrompt = () => {
       <Animated.View
         style={[styles.iconContainer, { transform: [{ translateY }] }]}
       >
-        <Ionicons
-          name="hourglass-outline"
-          size={48}
-          color="rgba(0,122,255,0.5)"
-        />
-        <View style={styles.sparkle}>
-        <Ionicons name="sparkles-outline" size={16} color={iconColor} style={{ opacity: 0.6 }} />
-        </View>
+        {isHoliday ? (
+          <Ionicons
+            name="sunny-outline"
+            size={48}
+            color="rgba(255,164,0,0.5)"
+          />
+        ) : (
+          <Ionicons
+            name="hourglass-outline"
+            size={48}
+            color="rgba(0,122,255,0.5)"
+          />
+        )}
+        {isHoliday ? null : (
+          <View style={styles.sparkle}>
+            <Ionicons
+              name={"sparkles-outline"}
+              size={16}
+              color={iconColor}
+              style={{ opacity: 0.6 }}
+            />
+          </View>
+        )}
       </Animated.View>
       <ThemedText style={styles.message}>
-        Time flows like sand...{"\n"}
-        <ThemedText style={styles.highlight}>Start tracking yours!</ThemedText>
+        {isHoliday ? (
+          <>
+            It's your day off!{"\n"}
+            <ThemedText style={[styles.highlight, styles.holidayHighlight]}>
+              Time to relax and recharge
+            </ThemedText>
+          </>
+        ) : (
+          <>
+            Time flows like sand...{"\n"}
+            <ThemedText style={styles.highlight}>
+              Start tracking yours!
+            </ThemedText>
+          </>
+        )}
       </ThemedText>
     </Animated.View>
   );
@@ -102,7 +138,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     right: -8,
-    // transform: [{ rotate: "45deg" }],
   },
   message: {
     fontSize: 16,
@@ -115,6 +150,9 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     fontSize: 18,
     color: "#007AFF",
+  },
+  holidayHighlight: {
+    color: "#FFA400",
   },
 });
 

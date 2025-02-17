@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Animated, Easing, Text, Falsy, RecursiveArray, RegisteredStyle } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Animated,
+  Easing,
+  Text,
+  Falsy,
+  RecursiveArray,
+  RegisteredStyle,
+} from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheetTypes";
@@ -14,7 +23,7 @@ const getNumberPosition = (hour: number) => {
   };
 };
 
-export const AnalogClock = (props: { style: ViewStyle }) => {
+export const AnalogClock = (props: { style?: ViewStyle }) => {
   const [time, setTime] = useState(new Date());
   const secondRotation = new Animated.Value(0);
 

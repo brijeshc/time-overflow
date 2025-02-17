@@ -5,7 +5,6 @@ import {
   TimeLoggingStorage,
 } from "@/app/common/services/dataStorage";
 import {
-  TimeLogEntry,
   DailyTargets,
 } from "@/app/common/interfaces/timeLogging";
 
@@ -54,8 +53,19 @@ export const cancelDailyNotification = async () => {
 
 export const checkAndScheduleNotification = async () => {
   const today = new Date().toISOString().split("T")[0];
-  const targets: DailyTargets = await TargetsStorage.getTargetsForDate(today);
+  
+  // Check if today is a holiday
+  const holidays = await TimeLoggingStorage.getHolidays();
+  if (holidays.includes(today)) {
+    // Cancel only today's notification
+    const notificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
+    if (notificationId) {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+    }
+    return;
+  }
 
+  const targets: DailyTargets = await TargetsStorage.getTargetsForDate(today);
   const todayLogs = await TimeLoggingStorage.getTodayLogs();
   const totalProductiveHours = todayLogs.reduce(
     (sum, log) =>

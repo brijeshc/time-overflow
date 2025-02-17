@@ -10,6 +10,7 @@ import AllTimeData from "../modules/Analytics/AllTimeData";
 import { useEffect } from "react";
 import { useTimeLogging } from "../context/TimeLoggingContext";
 import { useIsFocused } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AnalyticsScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -24,27 +25,29 @@ export default function AnalyticsScreen() {
   }, [isFocused]);
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>Analytics</ThemedText>
-        <View style={styles.cardsContainer}>
-          <TimeDistribution />
-          <RecentTrends />
-          <TargetAchievements />
-          <AllTimeData />
-          <ProductivityScore />
-        </View>
-      </ThemedView>
-    </ScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor}}>
+      <ScrollView
+        style={[styles.scrollView, { backgroundColor }]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <ThemedView style={styles.container}>
+          <ThemedText style={styles.title}>Analytics</ThemedText>
+          <View style={styles.cardsContainer}>
+            <TimeDistribution />
+            <RecentTrends />
+            <TargetAchievements />
+            <AllTimeData />
+            <ProductivityScore />
+          </View>
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   scrollView: {
-    flex: 1,
+    flex: 1
   },
   contentContainer: {
     flexGrow: 1,
@@ -52,8 +55,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     alignItems: "center",
-    paddingTop: 20,
-    marginTop: 25,
+    paddingTop: 10
   },
   cardsContainer: {
     width: "100%",
@@ -62,8 +64,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: "Poppins_500Medium",
+    fontFamily: "Poppins_600SemiBold",
     marginTop: 10,
     marginBottom: 20,
+    letterSpacing: 0.5,
   },
 });

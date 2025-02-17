@@ -19,11 +19,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { TodayActivities } from "../modules/TodayActivities/TodayActivities";
 import { TodaySummary } from "../modules/TodaySummary/TodaySummary";
-import { TimeLoggingProvider } from "../context/TimeLoggingContext";
 import { EmptyStatePrompt } from "../modules/EmptyStatePrompt/EmptyStatePrompt";
 import React from "react";
 import { BackHandler } from "react-native";
 import { SideMenu } from "../modules/SideMenu/SideMenu";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -83,7 +83,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <TimeLoggingProvider>
+    <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <ScrollView
         style={[styles.scrollView, { backgroundColor }]}
         contentContainerStyle={styles.contentContainer}
@@ -97,7 +97,7 @@ export default function HomeScreen() {
             <Ionicons name="settings-outline" size={24} color={textColor} />
           </TouchableOpacity>
 
-          <AnalogClock style={styles.clockContainer} />
+          <AnalogClock />
 
           {!showLogging ? (
             <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
@@ -119,7 +119,7 @@ export default function HomeScreen() {
         </ThemedView>
       </ScrollView>
       <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
-    </TimeLoggingProvider>
+    </SafeAreaView>
   );
 }
 
@@ -143,10 +143,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    marginTop: 15,
-    paddingTop: 20,
-  },
-  clockContainer: {
     marginTop: 15,
   },
   logButton: {

@@ -7,7 +7,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { TimeLoggingProvider } from "../context/TimeLoggingContext";
 
 export default function TabLayout() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -28,7 +27,6 @@ export default function TabLayout() {
   }, []);
 
   return (
-    <TimeLoggingProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
@@ -74,6 +72,5 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </TimeLoggingProvider>
   );
 }
