@@ -360,15 +360,6 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
-                Linking.openURL("https://buymeacoffee.com/brijeshc2049")
-              }
-            >
-              <ThemedText style={styles.linkText}>Support Developer</ThemedText>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.section}>
-            <TouchableOpacity
-              onPress={() =>
                 Linking.openURL(
                   "https://play.google.com/store/apps/details?id=com.timeoverflow.app"
                 )
