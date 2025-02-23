@@ -24,6 +24,7 @@ import React from "react";
 import { BackHandler } from "react-native";
 import { SideMenu } from "../modules/SideMenu/SideMenu";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Audio } from "expo-av";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -47,8 +48,38 @@ export default function HomeScreen() {
     );
     return () => backHandler.remove();
   }, [showLogging]);
+  const [buttonSound, setButtonSound] = useState<Audio.Sound | null>(null);
 
-  const handlePress = () => {
+  useEffect(() => {
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/logYourTime.mp3")
+      );
+      await sound.setVolumeAsync(0.06);
+      setButtonSound(sound);
+    };
+
+    loadSound();
+
+    return () => {
+      if (buttonSound) {
+        buttonSound.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playButtonSound = async () => {
+    try {
+      if (buttonSound) {
+        await buttonSound.replayAsync();
+      }
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  const handlePress = async () => {
+    await playButtonSound();
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.8,
@@ -64,7 +95,7 @@ export default function HomeScreen() {
     ]).start(() => {
       setTimeout(() => {
         setShowLogging(true);
-      }, 100);
+      }, 80);
     });
   };
 
@@ -148,7 +179,7 @@ const styles = StyleSheet.create({
   logButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(248, 246, 246, 0.1)",
+    backgroundColor: "rgba(185, 181, 180, 0.2)",
     borderColor: "#3498db",
     borderWidth: 1,
     paddingVertical: 12,
@@ -156,14 +187,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginTop: 30,
     gap: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   buttonText: {
     fontSize: 18,
