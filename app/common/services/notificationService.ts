@@ -4,9 +4,7 @@ import {
   TargetsStorage,
   TimeLoggingStorage,
 } from "@/app/common/services/dataStorage";
-import {
-  DailyTargets,
-} from "@/app/common/interfaces/timeLogging";
+import { DailyTargets } from "@/app/common/interfaces/timeLogging";
 
 const NOTIFICATION_KEY = "@daily_notification";
 const NOTIFICATION_TIME_KEY = "@daily_notification_time";
@@ -53,15 +51,8 @@ export const cancelDailyNotification = async () => {
 
 export const checkAndScheduleNotification = async () => {
   const today = new Date().toISOString().split("T")[0];
-  
-  // Check if today is a holiday
   const holidays = await TimeLoggingStorage.getHolidays();
   if (holidays.includes(today)) {
-    // Cancel only today's notification
-    const notificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
-    if (notificationId) {
-      await Notifications.cancelScheduledNotificationAsync(notificationId);
-    }
     return;
   }
 
@@ -73,13 +64,15 @@ export const checkAndScheduleNotification = async () => {
     0
   );
 
+  const notificationTime = await AsyncStorage.getItem(NOTIFICATION_TIME_KEY);
+  const { hour, minute } = notificationTime
+    ? JSON.parse(notificationTime)
+    : { hour: 21, minute: 0 };
+
   if (totalProductiveHours < targets.productiveHours) {
-    const notificationTime = await AsyncStorage.getItem(NOTIFICATION_TIME_KEY);
-    const { hour, minute } = notificationTime
-      ? JSON.parse(notificationTime)
-      : { hour: 21, minute: 0 };
-    await scheduleDailyNotification(hour, minute);
-  } else {
-    await cancelDailyNotification();
+    const existingNotificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
+    if (!existingNotificationId) {
+      await scheduleDailyNotification(hour, minute);
+    }
   }
 };

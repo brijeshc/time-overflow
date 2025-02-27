@@ -30,7 +30,7 @@ import {
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 import {
   cancelDailyNotification,
-  scheduleDailyNotification,
+  checkAndScheduleNotification,
 } from "../../common/services/notificationService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
@@ -134,9 +134,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
         "Daily reminder notifications have been disabled."
       );
     } else {
-      const hour = notificationTime.getHours();
-      const minute = notificationTime.getMinutes();
-      await scheduleDailyNotification(hour, minute);
+      await checkAndScheduleNotification();
       Alert.alert(
         "Notification Enabled",
         "Daily reminder notifications have been enabled."
@@ -183,7 +181,11 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
       if (isNotificationEnabled) {
         const hour = selectedTime.getHours();
         const minute = selectedTime.getMinutes();
-        await scheduleDailyNotification(hour, minute);
+        await AsyncStorage.setItem(
+          "@daily_notification_time",
+          JSON.stringify({ hour, minute })
+        );
+        await checkAndScheduleNotification();
         Alert.alert(
           "Notification Time Updated",
           `Daily reminder notifications will be sent at ${hour}:${

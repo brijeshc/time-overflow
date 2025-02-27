@@ -55,7 +55,7 @@ export default function HomeScreen() {
       const { sound } = await Audio.Sound.createAsync(
         require("@/assets/sounds/logYourTime.mp3")
       );
-      await sound.setVolumeAsync(0.06);
+      await sound.setVolumeAsync(0.3);
       setButtonSound(sound);
     };
 
