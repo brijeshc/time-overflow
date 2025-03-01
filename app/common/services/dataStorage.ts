@@ -33,16 +33,26 @@ export const TimeLoggingStorage = {
 
   async getTodayLogs(): Promise<TimeLogEntry[]> {
     const allLogs = await this.getAllLogs();
-    const today = new Date().toISOString().split("T")[0];
-    return allLogs.filter((log) => log.timestamp.split("T")[0] === today);
-  },
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of current day
 
+    return allLogs.filter((log) => {
+      const logDate = new Date(log.timestamp);
+      logDate.setHours(0, 0, 0, 0); // Set to start of log day
+      return logDate.getTime() === today.getTime();
+    });
+  },
   async updateTodayLogs(updatedTodayLogs: TimeLogEntry[]): Promise<void> {
     const allLogs = await this.getAllLogs();
-    const today = new Date().toISOString().split("T")[0];
-    const nonTodayLogs = allLogs.filter(
-      (log) => log.timestamp.split("T")[0] !== today
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const nonTodayLogs = allLogs.filter((log) => {
+      const logDate = new Date(log.timestamp);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() !== today.getTime();
+    });
+
     await AsyncStorage.setItem(
       STORAGE_KEY,
       JSON.stringify([...nonTodayLogs, ...updatedTodayLogs])
@@ -64,7 +74,10 @@ export const TimeLoggingStorage = {
   }> {
     const logs = await this.getAllLogs();
     return logs.reduce((acc, log) => {
-      const date = log.timestamp.split("T")[0];
+      const logDate = new Date(log.timestamp);
+      logDate.setHours(0, 0, 0, 0);
+      const date = logDate.toISOString().split("T")[0];
+
       if (!acc[date]) {
         acc[date] = { productive: 0, wasteful: 0, neutral: 0 };
       }
@@ -73,7 +86,6 @@ export const TimeLoggingStorage = {
       return acc;
     }, {} as { [key: string]: { productive: number; wasteful: number; neutral: number } });
   },
-
   async exportLogs(): Promise<string> {
     const logs = await this.getAllLogs();
     return JSON.stringify(logs, null, 2);
@@ -194,7 +206,10 @@ export const TimeLoggingStorage = {
       const holidays = await this.getHolidays();
 
       const logsByDate = logs.reduce((acc, log) => {
-        const date = log.timestamp.split("T")[0];
+        const logDate = new Date(log.timestamp);
+        logDate.setHours(0, 0, 0, 0);
+        const date = logDate.toISOString().split("T")[0];
+
         if (!acc[date]) acc[date] = [];
         acc[date].push(log);
         return acc;
