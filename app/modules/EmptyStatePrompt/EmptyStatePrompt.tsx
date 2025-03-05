@@ -55,14 +55,7 @@ export const EmptyStatePrompt = () => {
   };
 
   const checkTodayActivities = async () => {
-    const allLogs = await TimeLoggingStorage.getAllLogs();
-    const today = new Date().toISOString().split("T")[0];
-    const todayLogs = allLogs.filter(
-      (log) =>
-        log.timestamp.split("T")[0] === today &&
-        log.activity && // Verify activity exists
-        (log.hours > 0 || log.minutes > 0) // Verify time is logged
-    );
+    const todayLogs = await TimeLoggingStorage.getTodayLogs();
     setHasActivities(todayLogs.length > 0);
   };
 

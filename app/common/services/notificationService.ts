@@ -1,30 +1,21 @@
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  TargetsStorage,
-  TimeLoggingStorage,
-} from "@/app/common/services/dataStorage";
-import { DailyTargets } from "@/app/common/interfaces/timeLogging";
 
 const NOTIFICATION_KEY = "@daily_notification";
 const NOTIFICATION_TIME_KEY = "@daily_notification_time";
 
-export const scheduleDailyNotification = async (
-  hour: number,
-  minute: number
-) => {
+export const scheduleDailyNotification = async (hour: number, minute: number) => {
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== "granted") {
     await Notifications.requestPermissionsAsync();
   }
 
-  // Cancel any existing notification before scheduling a new one
   await cancelDailyNotification();
 
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Daily Reminder",
-      body: "You haven't logged enough hours today. Don't forget to log your time!",
+      title: "Daily Time Log Reminder",
+      body: "Remember to log your activities for today!",
     },
     trigger: {
       hour,
@@ -34,10 +25,7 @@ export const scheduleDailyNotification = async (
   });
 
   await AsyncStorage.setItem(NOTIFICATION_KEY, notificationId);
-  await AsyncStorage.setItem(
-    NOTIFICATION_TIME_KEY,
-    JSON.stringify({ hour, minute })
-  );
+  await AsyncStorage.setItem(NOTIFICATION_TIME_KEY, JSON.stringify({ hour, minute }));
 };
 
 export const cancelDailyNotification = async () => {
@@ -50,29 +38,10 @@ export const cancelDailyNotification = async () => {
 };
 
 export const checkAndScheduleNotification = async () => {
-  const today = new Date().toISOString().split("T")[0];
-  const holidays = await TimeLoggingStorage.getHolidays();
-  if (holidays.includes(today)) {
-    return;
-  }
-
-  const targets: DailyTargets = await TargetsStorage.getTargetsForDate(today);
-  const todayLogs = await TimeLoggingStorage.getTodayLogs();
-  const totalProductiveHours = todayLogs.reduce(
-    (sum, log) =>
-      log.category === "productive" ? sum + log.hours + log.minutes / 60 : sum,
-    0
-  );
-
   const notificationTime = await AsyncStorage.getItem(NOTIFICATION_TIME_KEY);
-  const { hour, minute } = notificationTime
-    ? JSON.parse(notificationTime)
+  const { hour, minute } = notificationTime 
+    ? JSON.parse(notificationTime) 
     : { hour: 21, minute: 0 };
-
-  if (totalProductiveHours < targets.productiveHours) {
-    const existingNotificationId = await AsyncStorage.getItem(NOTIFICATION_KEY);
-    if (!existingNotificationId) {
-      await scheduleDailyNotification(hour, minute);
-    }
-  }
+    
+  await scheduleDailyNotification(hour, minute);
 };

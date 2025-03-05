@@ -17,11 +17,7 @@ export const TodaySummary = () => {
   }, [refreshTrigger]);
 
   const loadTodaySummary = async () => {
-    const allLogs = await TimeLoggingStorage.getAllLogs();
-    const today = new Date().toISOString().split("T")[0];
-    const todayLogs = allLogs.filter(
-      (log) => log.timestamp.split("T")[0] === today
-    );
+    const todayLogs = await TimeLoggingStorage.getTodayLogs();
 
     const totals = todayLogs.reduce(
       (acc, log) => {

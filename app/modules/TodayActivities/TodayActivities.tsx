@@ -42,11 +42,7 @@ export const TodayActivities = () => {
   }, []);
 
   const loadTodayActivities = async () => {
-    const allLogs = await TimeLoggingStorage.getAllLogs();
-    const today = new Date().toISOString().split("T")[0];
-    const todayLogs = allLogs.filter(
-      (log) => log.timestamp.split("T")[0] === today
-    );
+    const todayLogs = await TimeLoggingStorage.getTodayLogs();
     setTodayActivities(todayLogs);
   };
 
@@ -165,6 +161,7 @@ export const TodayActivities = () => {
                 <View style={styles.nameTimeContainer}>
                   <ThemedText style={styles.activityName}>
                     {activity.activity}
+                    {activity.isPomodoro && " 🍅"}
                   </ThemedText>
                   <ThemedText style={styles.timeStamp}>
                     {` • ${formatTime(activity.timestamp)}`}
@@ -220,7 +217,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(200, 200, 200, 0.3)", // Better contrast in light mode
+    backgroundColor: "rgba(200, 200, 200, 0.3)",
     borderRadius: 10,
     marginBottom: 8,
   },

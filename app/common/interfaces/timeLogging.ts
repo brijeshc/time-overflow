@@ -6,6 +6,7 @@ export interface TimeLogEntry {
   category: "productive" | "neutral" | "wasteful";
   timestamp: string;
   synced?: boolean;
+  isPomodoro?: boolean;
 }
 
 export interface TimeLogAnalytics {

@@ -322,8 +322,7 @@ export const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
               />
             </View>
             <ThemedText style={styles.infoText}>
-              Enable this to receive daily reminders if you haven't logged
-              enough productive hours.
+              Enable this to receive daily reminders to log your time.
             </ThemedText>
             <TouchableOpacity onPress={() => setShowTimePicker(true)}>
               <ThemedText style={styles.timePickerText}>
