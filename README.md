@@ -1,6 +1,8 @@
 # Time Overflow
 
 A productivity-focused time logging app that helps you track and optimize your daily activities.
+The app is published in Google Play Store.
+https://play.google.com/store/apps/details?id=com.timeoverflow.app
 
 ## About
 
@@ -35,7 +37,7 @@ Kindly check this link for ionicons list. https://icons.expo.fyi/Index
 Kindly check https://docs.expo.dev/build/setup/ for more information
 before each build: 
 npx expo prebuild --clean 
-Then update build.gradle versionName to new version if you want to generate unique production build
+Then update app.json versionName to new version if you want to generate unique production build
 - `eas build --platform android`
 - `eas build --platform ios`
 - `eas build:configure` `npx expo prebuild`
