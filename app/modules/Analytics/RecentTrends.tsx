@@ -28,6 +28,8 @@ export const RecentTrends = () => {
 
   const loadWeekData = async () => {
     const allLogs = await TimeLoggingStorage.getAllLogs();
+
+    // Generate last 7 days starting from today
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -35,9 +37,10 @@ export const RecentTrends = () => {
     }).reverse();
 
     const weekStats = last7Days.map((date) => {
-      const dayLogs = allLogs.filter(
-        (log) => log.timestamp.split("T")[0] === date
-      );
+      const dayLogs = allLogs.filter((log) => {
+        const logDate = new Date(log.timestamp);
+        return logDate.toISOString().split("T")[0] === date;
+      });
 
       const calculateHours = (category: string) => {
         return dayLogs
@@ -60,7 +63,6 @@ export const RecentTrends = () => {
       };
     });
 
-    // Calculate weekly highlights
     const highlights = {
       mostProductiveDay: weekStats.reduce((a, b) =>
         a.productive > b.productive ? a : b

@@ -222,7 +222,8 @@ export const TimeLoggingStorage = {
 
           const totals = dayLogs.reduce(
             (sum, log) => {
-              const hours = log.hours + log.minutes / 60;
+              const multiplier = log.isPomodoro ? 1.5 : 1;
+              const hours = (log.hours + log.minutes / 60) * multiplier;
               sum[log.category] += hours;
               return sum;
             },

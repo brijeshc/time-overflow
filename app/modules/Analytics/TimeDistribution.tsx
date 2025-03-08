@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { TimeLoggingStorage } from '../../common/services/dataStorage';
-import { Svg, Line, G, Text, Circle } from 'react-native-svg';
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Dimensions } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { TimeLoggingStorage } from "../../common/services/dataStorage";
+import { Svg, Line, G, Text, Circle } from "react-native-svg";
 import { useTimeLogging } from "@/app/context/TimeLoggingContext";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export const TimeDistribution = () => {
-  const textColor = useThemeColor({}, 'text');
+  const textColor = useThemeColor({}, "text");
   const { refreshTrigger } = useTimeLogging();
   const [chartData, setChartData] = useState<{
     labels: string[];
@@ -17,9 +17,9 @@ export const TimeDistribution = () => {
   }>({
     labels: [],
     datasets: [
-      { data: [], color: '#4CAF50' }, // Productive
-      { data: [], color: '#FF5252' }, // Wasteful
-      { data: [], color: '#FFC107' }, // Neutral
+      { data: [], color: "#4CAF50" },
+      { data: [], color: "#FF5252" },
+      { data: [], color: "#FFC107" },
     ],
   });
 
@@ -29,28 +29,54 @@ export const TimeDistribution = () => {
 
   const loadChartData = async () => {
     try {
-      const groupedLogs = await TimeLoggingStorage.groupLogsByDate();
-      const labels = Object.keys(groupedLogs);
-      const productiveData = labels.map(date => groupedLogs[date].productive);
-      const wastefulData = labels.map(date => groupedLogs[date].wasteful);
-      const neutralData = labels.map(date => groupedLogs[date].neutral);
+      const allLogs = await TimeLoggingStorage.getAllLogs();
+      const groupedLogs = allLogs.reduce((acc, log) => {
+        const logDate = new Date(log.timestamp);
+        logDate.setHours(0, 0, 0, 0);
+        const date = logDate.toISOString().split("T")[0];
+
+        if (!acc[date]) {
+          acc[date] = { productive: 0, wasteful: 0, neutral: 0 };
+        }
+        const minutes = log.hours * 60 + log.minutes;
+        acc[date][log.category] += minutes;
+        return acc;
+      }, {} as { [key: string]: { productive: number; wasteful: number; neutral: number } });
+
+      // Add today if not present
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split("T")[0];
+      if (!groupedLogs[todayStr]) {
+        groupedLogs[todayStr] = { productive: 0, wasteful: 0, neutral: 0 };
+      }
+
+      const labels = Object.keys(groupedLogs).sort((a, b) => {
+        return new Date(a).getTime() - new Date(b).getTime();
+      });
+
+      const productiveData = labels.map((date) => groupedLogs[date].productive);
+      const wastefulData = labels.map((date) => groupedLogs[date].wasteful);
+      const neutralData = labels.map((date) => groupedLogs[date].neutral);
 
       setChartData({
         labels,
         datasets: [
-          { data: productiveData, color: '#4CAF50' },
-          { data: wastefulData, color: '#FF5252' },
-          { data: neutralData, color: '#FFC107' },
+          { data: productiveData, color: "#4CAF50" },
+          { data: wastefulData, color: "#FF5252" },
+          { data: neutralData, color: "#FFC107" },
         ],
       });
     } catch (error) {
-      console.error('Error loading chart data:', error);
+      console.error("Error loading chart data:", error);
     }
   };
 
   const renderLineChart = () => {
     const { labels, datasets } = chartData;
-    const maxDataValue = Math.max(...datasets.flatMap(dataset => dataset.data));
+    const maxDataValue = Math.max(
+      ...datasets.flatMap((dataset) => dataset.data)
+    );
     const chartHeight = 220;
     const chartWidth = width - 32;
     const padding = 40;
@@ -148,15 +174,21 @@ export const TimeDistribution = () => {
         </Svg>
         <View style={styles.legendContainer}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
+            <View
+              style={[styles.legendColor, { backgroundColor: "#4CAF50" }]}
+            />
             <ThemedText style={styles.legendText}>Productive</ThemedText>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#FF5252' }]} />
+            <View
+              style={[styles.legendColor, { backgroundColor: "#FF5252" }]}
+            />
             <ThemedText style={styles.legendText}>Wasteful</ThemedText>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#FFC107' }]} />
+            <View
+              style={[styles.legendColor, { backgroundColor: "#FFC107" }]}
+            />
             <ThemedText style={styles.legendText}>Neutral</ThemedText>
           </View>
         </View>
@@ -179,16 +211,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
+    fontFamily: "Poppins_500Medium",
   },
   legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 10,
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: 10,
   },
   legendColor: {
@@ -198,7 +230,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: "Poppins_400Regular",
   },
 });
 

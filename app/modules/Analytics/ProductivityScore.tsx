@@ -67,7 +67,8 @@ export const ProductivityScore = () => {
               {score.toFixed(2)}%
             </ThemedText>
             <ThemedText style={[styles.totalDays, { color: textColor }]}>
-              over {totalDays} {totalDays === 1 ? "day" : "days"}
+              over {totalDays}{" "}
+              {totalDays === 1 ? "working day" : "working days"}
             </ThemedText>
           </View>
           <ThemedText style={[styles.message, { color: textColor }]}>

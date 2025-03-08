@@ -45,14 +45,14 @@ export const AllTimeData = () => {
     const allLogs = await TimeLoggingStorage.getAllLogs();
     if (allLogs.length === 0) return;
 
-    const startDate = new Date(allLogs[0].timestamp).toLocaleDateString(
-      "en-GB",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    // Get earliest log date with timezone handling
+    const firstLogDate = new Date(allLogs[0].timestamp);
+    firstLogDate.setHours(0, 0, 0, 0);
+    const startDate = firstLogDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
 
     const totals = allLogs.reduce(
       (
@@ -65,6 +65,9 @@ export const AllTimeData = () => {
         },
         log: TimeLogEntry
       ) => {
+        const logDate = new Date(log.timestamp);
+        logDate.setHours(0, 0, 0, 0);
+
         const minutes = log.hours * 60 + log.minutes;
         acc.totalHours += minutes;
         acc[`${log.category}Hours`] += minutes;
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     backgroundColor: "rgba(52, 152, 219, 0.1)",
-    flexWrap: 'wrap'
+    flexWrap: "wrap",
   },
   activityLabel: {
     fontSize: 14,
@@ -249,7 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_500Medium",
     color: "#3498db",
-    flexShrink: 0
+    flexShrink: 0,
   },
 });
 

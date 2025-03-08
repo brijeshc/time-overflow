@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const NOTIFICATION_KEY = "@daily_notification";
 const NOTIFICATION_TIME_KEY = "@daily_notification_time";
+const POMODORO_NOTIFICATION_KEY = "@pomodoro_notification";
 
 export const scheduleDailyNotification = async (hour: number, minute: number) => {
   const { status } = await Notifications.getPermissionsAsync();
@@ -44,4 +45,33 @@ export const checkAndScheduleNotification = async () => {
     : { hour: 21, minute: 0 };
     
   await scheduleDailyNotification(hour, minute);
+};
+
+
+export const schedulePomodoroCompletionNotification = async (endTime: Date, focusDuration: number) => {
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== "granted") {
+    await Notifications.requestPermissionsAsync();
+  }
+
+  const notificationId = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Great Job!",
+      body: `You've completed your focus session for ${focusDuration} minutes. Keep up the good work!`,
+    },
+    trigger: {
+      date: endTime,
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+    },
+  });
+
+  await AsyncStorage.setItem(POMODORO_NOTIFICATION_KEY, notificationId);
+};
+
+export const cancelPomodoroNotification = async () => {
+  const notificationId = await AsyncStorage.getItem(POMODORO_NOTIFICATION_KEY);
+  if (notificationId) {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+    await AsyncStorage.removeItem(POMODORO_NOTIFICATION_KEY);
+  }
 };

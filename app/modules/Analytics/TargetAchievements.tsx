@@ -103,7 +103,6 @@ export const TargetAchievements = () => {
       };
     }
 
-    // Process holidays
     holidays.forEach((date) => {
       const existingDate = dateMap[date];
       dateMap[date] = {
@@ -121,11 +120,16 @@ export const TargetAchievements = () => {
 
     return dateMap;
   };
+
   const onDayPress = async (day: any) => {
     const logs = await TimeLoggingStorage.getAllLogs();
-    const selectedDayLogs = logs.filter(
-      (log) => log.timestamp.split("T")[0] === day.dateString
-    );
+    const selectedDayLogs = logs.filter((log) => {
+      const logDate = new Date(log.timestamp);
+      logDate.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(day.dateString);
+      selectedDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() === selectedDate.getTime();
+    });
     setDayLogs(selectedDayLogs);
     setSelectedDate(day.dateString);
     setShowLogsModal(true);
@@ -133,38 +137,37 @@ export const TargetAchievements = () => {
 
   const markAsHoliday = async (date: string) => {
     try {
-        await TimeLoggingStorage.saveHoliday(date);
-        setMarkedDates((prev) => ({
-            ...prev,
-            [date]: {
-                selected: true,
-                selectedColor: "#3498db",
-                marked: true,
-                dotColor: "#ffffff",
-            },
-        }));
-        setShowLogsModal(false);
-        triggerRefresh(); // Moved after all async operations
+      await TimeLoggingStorage.saveHoliday(date);
+      setMarkedDates((prev) => ({
+        ...prev,
+        [date]: {
+          selected: true,
+          selectedColor: "#3498db",
+          marked: true,
+          dotColor: "#ffffff",
+        },
+      }));
+      setShowLogsModal(false);
+      triggerRefresh(); // Moved after all async operations
     } catch (error) {
-        console.error("Error marking holiday:", error);
+      console.error("Error marking holiday:", error);
     }
-};
+  };
 
-const unmarkHoliday = async (date: string) => {
+  const unmarkHoliday = async (date: string) => {
     try {
-        await TimeLoggingStorage.unmarkHoliday(date);
-        setMarkedDates((prev) => {
-            const newMarkedDates = { ...prev };
-            delete newMarkedDates[date];
-            return newMarkedDates;
-        });
-        setShowLogsModal(false);
-        triggerRefresh(); // Moved after all async operations
+      await TimeLoggingStorage.unmarkHoliday(date);
+      setMarkedDates((prev) => {
+        const newMarkedDates = { ...prev };
+        delete newMarkedDates[date];
+        return newMarkedDates;
+      });
+      setShowLogsModal(false);
+      triggerRefresh(); // Moved after all async operations
     } catch (error) {
-        console.error("Error unmarking holiday:", error);
+      console.error("Error unmarking holiday:", error);
     }
-};
-
+  };
 
   const isHoliday = (date: string) => {
     return markedDates[date]?.marked;

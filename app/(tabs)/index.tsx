@@ -34,6 +34,10 @@ export default function HomeScreen() {
   const [showTimer, setShowTimer] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [timerSound, setTimerSound] = useState<Audio.Sound | null>(null);
+  const [buttonSound, setButtonSound] = useState<Audio.Sound | null>(null);
+  const [startSound, setStartSound] = useState<Audio.Sound | null>(null);
+  const [endSound, setEndSound] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
     const backAction = () => {
@@ -54,15 +58,30 @@ export default function HomeScreen() {
     );
     return () => backHandler.remove();
   }, [showLogging, showTimer]);
-  const [buttonSound, setButtonSound] = useState<Audio.Sound | null>(null);
+  
 
   useEffect(() => {
     const loadSound = async () => {
       const { sound } = await Audio.Sound.createAsync(
         require("@/assets/sounds/logYourTime.mp3")
       );
+      const { sound: pomodoroSound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/timer.mp3")
+      );
+      const { sound: startSound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/start.mp3")
+      );
+      const { sound: endSound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/end.mp3")
+      );
       await sound.setVolumeAsync(0.3);
+      await pomodoroSound.setVolumeAsync(0.3);
+      await startSound.setVolumeAsync(0.3);
+      await endSound.setVolumeAsync(0.3);
       setButtonSound(sound);
+      setTimerSound(pomodoroSound);
+      setStartSound(startSound);
+      setEndSound(endSound);
     };
 
     loadSound();
@@ -85,7 +104,13 @@ export default function HomeScreen() {
   };
 
   const handleTimerPress = async () => {
-    await playButtonSound();
+    try {
+      if (timerSound) {
+        await timerSound.replayAsync();
+      }
+    } catch (error) {
+      console.error("Error playing timer sound:", error);
+    }
     setShowTimer(true);
   };
 
@@ -131,7 +156,8 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
       >
         {showTimer ? (
-          <PomodoroTimer onClose={() => setShowTimer(false)} />
+          <PomodoroTimer onClose={() => setShowTimer(false)}  startSound={startSound}
+          endSound={endSound}/>
         ) : (
           <>
             <SideMenu isVisible={showMenu} onClose={() => setShowMenu(false)} />
