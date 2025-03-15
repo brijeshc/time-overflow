@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -64,7 +64,21 @@ export default function Tutorial() {
             and achieve your personal goals.
           </ThemedText>
           <ThemedText style={[styles.subtitle, { color: textColor }]}>
-            4. Exporting Data
+            4. Pomodoro Timer 🍅
+          </ThemedText>
+          <ThemedText style={[styles.paragraph, { color: textColor }]}>
+            Boost your productivity with our Pomodoro Timer feature. This
+            technique helps you stay focused by working in dedicated time
+            blocks. Set custom durations between 2-90 minutes (default is 25
+            minutes). Timer automatically logs your completed sessions as
+            productive time. Pause, reset, or end your session at any time.
+            Minimum 1 minute of focus required to log a session. Name your focus
+            task to stay on track. The Pomodoro Timer is perfect for deep work
+            sessions and helps you maintain concentration while automatically
+            tracking your productive time.
+          </ThemedText>
+          <ThemedText style={[styles.subtitle, { color: textColor }]}>
+            5. Exporting Data
           </ThemedText>
           <ThemedText style={[styles.paragraph, { color: textColor }]}>
             Access and export your logs for in-depth analysis or backup

@@ -22,8 +22,8 @@ import { Dialog } from "@rneui/themed";
 import { ThemedText } from "./ThemedText";
 import { Audio } from "expo-av";
 import {
-  schedulePomodoroCompletionNotification,
   cancelPomodoroNotification,
+  showPomodoroCompletionNotification,
 } from "@/app/common/services/notificationService";
 
 const DEFAULT_DURATION = 25;
@@ -49,6 +49,7 @@ const PomodoroTimer = ({
   const [isFirstStart, setIsFirstStart] = useState(true);
   const [duration, setDuration] = useState(DEFAULT_DURATION * 60);
   const [timeLeft, setTimeLeft] = useState(DEFAULT_DURATION * 60);
+  const [isCompletedSession, setIsCompletedSession] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [inputMinutes, setInputMinutes] = useState("25");
@@ -157,16 +158,13 @@ const PomodoroTimer = ({
     startTimeRef.current = Date.now();
     initialDurationRef.current = timeLeft;
     isRunningRef.current = true;
-
-    const endTime = new Date(Date.now() + timeLeft * 1000);
-    schedulePomodoroCompletionNotification(endTime, duration / 60);
-
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
           setIsRunning(false);
           isRunningRef.current = false;
+          setIsCompletedSession(true);
           return 0;
         }
         return prev - 1;
@@ -204,9 +202,7 @@ const PomodoroTimer = ({
 
   const logSession = async () => {
     const timeSpent = duration - timeLeft;
-    const isCompletedSession = timeLeft === 0;
 
-    // Only show alert if session was manually stopped before completing
     if (!isCompletedSession && timeSpent < 60) {
       Alert.alert(
         "Minimum Focus Time Required",
@@ -234,6 +230,10 @@ const PomodoroTimer = ({
 
     try {
       await TimeLoggingStorage.saveLogs(newEntry);
+
+      // Always show a notification when logging a completed session
+      await showPomodoroCompletionNotification(totalMinutes);
+
       triggerRefresh();
       onClose();
     } catch (error) {
@@ -245,6 +245,9 @@ const PomodoroTimer = ({
     if (isRunning) {
       pauseTimer();
     }
+
+    cancelPomodoroNotification();
+
     if (endSound) {
       endSound.replayAsync();
     }
@@ -289,7 +292,7 @@ const PomodoroTimer = ({
               ? "rgba(10, 82, 47, 0.2)"
               : "rgba(142, 240, 245, 0.2)"
           }
-          borderWidth={2}
+          borderWidth={4}
         />
       </View>
 
@@ -335,6 +338,7 @@ const PomodoroTimer = ({
           ]}
           onPress={() => {
             cancelPomodoroNotification();
+            setIsCompletedSession(false);
             endSession();
           }}
         >

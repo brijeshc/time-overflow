@@ -26,6 +26,7 @@ import { SideMenu } from "../modules/SideMenu/SideMenu";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Audio } from "expo-av";
 import PomodoroTimer from "@/components/PomodoroTimer";
+import { setupNotificationHandler } from "../common/services/notificationService";
 
 export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   
 
   useEffect(() => {
+    setupNotificationHandler();
     const loadSound = async () => {
       const { sound } = await Audio.Sound.createAsync(
         require("@/assets/sounds/logYourTime.mp3")

@@ -156,7 +156,7 @@ export const TargetAchievements = () => {
         },
       }));
       setShowLogsModal(false);
-      triggerRefresh(); // Moved after all async operations
+      triggerRefresh();
     } catch (error) {
       console.error("Error marking holiday:", error);
     }
@@ -171,7 +171,7 @@ export const TargetAchievements = () => {
         return newMarkedDates;
       });
       setShowLogsModal(false);
-      triggerRefresh(); // Moved after all async operations
+      triggerRefresh();
     } catch (error) {
       console.error("Error unmarking holiday:", error);
     }
@@ -207,6 +207,7 @@ export const TargetAchievements = () => {
       (acc, log) => {
         const hours = log.hours + log.minutes / 60;
         acc[log.category] += hours;
+
         return acc;
       },
       {
@@ -278,6 +279,7 @@ export const TargetAchievements = () => {
               <View key={log.id} style={styles.logItem}>
                 <View style={styles.logItemContent}>
                   <ThemedText style={styles.activityText} numberOfLines={2}>
+                    {log.isPomodoro ? "🍅 " : ""}
                     {log.activity}
                   </ThemedText>
                   <ThemedText style={styles.durationText}>
