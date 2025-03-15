@@ -201,7 +201,7 @@ export const TimeLoggingStorage = {
   async calculateProductivityScore(): Promise<ProductivityScore | null> {
     try {
       const logs = await this.getAllLogs();
-      if (logs.length === 0) return null;
+      if (logs.length === 0) return { score: 0, totalDays: 0 };
 
       const holidays = await this.getHolidays();
 
@@ -231,9 +231,10 @@ export const TimeLoggingStorage = {
           );
 
           if (isHoliday) {
-            // Only consider productive hours on holidays
+            // Handle boundary case for productive hours target
+            const productiveTarget = Math.max(1, targets.productiveHours); // Ensure minimum of 1
             const productiveScore =
-              (totals.productive / targets.productiveHours) * 100;
+              (totals.productive / productiveTarget) * 100;
             return {
               date,
               score: productiveScore, // Direct productive hour contribution
@@ -242,16 +243,21 @@ export const TimeLoggingStorage = {
             };
           }
 
+          // Handle boundary cases for all targets
+          const productiveTarget = Math.max(1, targets.productiveHours); // Ensure minimum of 1
+          const wastefulTarget = Math.max(0.1, targets.wastefulMaxHours); // Avoid division by zero
+          const neutralTarget = Math.max(0.1, targets.neutralMaxHours); // Avoid division by zero
+
           const productiveScore = Math.min(
-            (totals.productive / targets.productiveHours) * 100,
+            (totals.productive / productiveTarget) * 100,
             100
           );
           const wastefulPenalty = Math.min(
-            (totals.wasteful / targets.wastefulMaxHours) * 100,
+            (totals.wasteful / wastefulTarget) * 100,
             100
           );
           const neutralBalance = Math.min(
-            (totals.neutral / targets.neutralMaxHours) * 100,
+            (totals.neutral / neutralTarget) * 100,
             100
           );
 
@@ -269,6 +275,11 @@ export const TimeLoggingStorage = {
         })
       );
 
+      // Handle case when no scores are available
+      if (dailyScores.length === 0) {
+        return { score: 0, totalDays: 0 };
+      }
+
       const sortedScores = dailyScores.sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
@@ -283,8 +294,12 @@ export const TimeLoggingStorage = {
         0
       );
 
+      // Handle case when totalWeight is 0
       const finalScore =
-        weightedScores.reduce((sum, score) => sum + score, 0) / totalWeight;
+        totalWeight > 0
+          ? weightedScores.reduce((sum, score) => sum + score, 0) / totalWeight
+          : 0;
+
       const totalDays = sortedScores.filter(
         (day) => day.countTowardsTotalDays
       ).length;
@@ -295,7 +310,7 @@ export const TimeLoggingStorage = {
       };
     } catch (error) {
       console.error("Error calculating productivity score:", error);
-      return null;
+      return { score: 0, totalDays: 0 }; // Return default instead of null
     }
   },
   async clearAllLogs(): Promise<void> {

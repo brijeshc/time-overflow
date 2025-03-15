@@ -54,7 +54,7 @@ export const ProductivityScore = () => {
       <ThemedText style={[styles.title, { color: textColor }]}>
         Productivity Score
       </ThemedText>
-      {score !== null ? (
+      {score !== null && score != 0 ? (
         <>
           <Ionicons
             name={getIconName(score)}

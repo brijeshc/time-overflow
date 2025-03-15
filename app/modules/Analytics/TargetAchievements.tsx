@@ -72,6 +72,10 @@ export const TargetAchievements = () => {
 
     for (const [date, dayLogs] of Object.entries(groupedLogs)) {
       const dailyTargets = await TargetsStorage.getTargetsForDate(date);
+
+      // Handle boundary cases for targets
+      const productiveTarget = Math.max(1, dailyTargets.productiveHours);
+
       const totals = {
         productive: 0,
         wasteful: 0,
@@ -84,8 +88,12 @@ export const TargetAchievements = () => {
       });
 
       const totalHours = totals.productive + totals.wasteful + totals.neutral;
-      const wastefulPercentage = (totals.wasteful / totalHours) * 100;
-      const isProductiveDay = totals.productive >= dailyTargets.productiveHours;
+
+      const wastefulPercentage =
+        totalHours > 0 ? (totals.wasteful / totalHours) * 100 : 0;
+
+      // Check if productive target was met
+      const isProductiveDay = totals.productive >= productiveTarget;
 
       let color;
       if (isProductiveDay) {
@@ -186,8 +194,15 @@ export const TargetAchievements = () => {
     }
   };
 
-  // Add utility function for calculating totals
   const calculateDayTotals = (logs: TimeLogEntry[]) => {
+    if (!logs || logs.length === 0) {
+      return {
+        productive: 0,
+        neutral: 0,
+        wasteful: 0,
+      };
+    }
+
     return logs.reduce(
       (acc, log) => {
         const hours = log.hours + log.minutes / 60;
